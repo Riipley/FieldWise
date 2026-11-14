@@ -992,13 +992,102 @@ export function detectSeasonalPlantingCrops(
         seasonAr = 'العروة الصيفية';
       }
 
+      const CROP_PLANTING_GUIDANCE: Record<
+        string,
+        { nowEn: string; nowAr: string; upcomingEn: string; upcomingAr: string }
+      > = {
+        wheat: {
+          nowEn: `Prime sowing window (Nov 15 – Dec 10): Cool night temperatures (${crop.tempOptMin}–${crop.tempOptMax}°C) trigger vigorous tillering and avoid spring terminal heat stress during April grain filling (450 mm ETc).`,
+          nowAr: `ذروة التبكير المثالي للقمح (15 نوفمبر – 10 ديسمبر): اعتدال الحرارة (${crop.tempOptMin}–${crop.tempOptMax}°م) يحفز التفريع القاعدي الكثيف ويجنب السنابل لفحة الحرارة في أبريل (450 ملم).`,
+          upcomingEn: `Prepare laser-leveled seedbeds and secure certified seed (Misr 3 / Sakha 95) for the Nov 15 – Dec 10 winter sowing campaign.`,
+          upcomingAr: `يوصى بتسوية الأرض بالليزر وتجهيز التقاوي المعتمدة (مصر 3 / سخا 95) استعداداً للزراعة من منتصف نوفمبر.`,
+        },
+        barley: {
+          nowEn: `Optimal late-autumn sowing (${monthNameEn}): High salinity tolerance (up to 8.0 dS/m) and low water demand (350 mm) make it ideal for marginal or canal-tail parcels.`,
+          nowAr: `ميعاد مثالي لزراعة الشعير (${monthNameAr}): يتحمل الملوحة حتى 8.0 ديسيسيمنز/م باحتياج مائي منخفض (350 ملم) للأراضي الملحية ونهايات الترع.`,
+          upcomingEn: `Upcoming winter cereal window: Prepare ridges for drought- and salt-tolerant Barley sowing (${crop.growingDays}-day cycle).`,
+          upcomingAr: `تقترب عروة زراعة الشعير الشتوية: جهز المراقد لمحصول متحمل للملوحة والجفاف (${crop.growingDays} يوماً).`,
+        },
+        faba_bean: {
+          nowEn: `Ideal Oct–Nov sowing window: Inoculate seed with Rhizobium leguminosarum to fix 80–150 kg N/ha (25–45 kg N/ha net residual credit); select Giza 843 or Misr 3 for Orobanche tolerance.`,
+          nowAr: `أنسب موعد لزراعة الفول البلدي: لقّح التقاوي بالعقدين البكتيري لتثبيت 80–150 كجم N/هكتار (رصيد صافي 25–45 كجم N/هكتار) مع اختيار صنف جيزة 843 أو مصر 3 لتحمل الهالوك.`,
+          upcomingEn: `Procure Rhizobium inoculant and phosphorus superphosphate ahead of next month's Faba Bean sowing window.`,
+          upcomingAr: `جهز لقاح العقدين البكتيري وسوبر فوسفات الكالسيوم استعداداً لزراعة الفول البلدي الشهر المقبل.`,
+        },
+        chickpea: {
+          nowEn: `Optimal Nov–Dec planting window: Deep taproot (1.2 m) thrives on conserved winter moisture (300 mm ETc) and adds 15–28 kg N/ha net residual nitrogen; avoid waterlogged soils.`,
+          nowAr: `موعد مثالي لزراعة الحمص (نوفمبر–ديسمبر): جذوره الوتدية العميقة (1.2 م) تكتفي باحتياج مائي قليل (300 ملم) وتضيف 15–28 كجم N/هكتار للتربة؛ تجنب الأراضي الغدقة.`,
+          upcomingEn: `Prepare well-drained sandy-loam or loam beds for upcoming winter Chickpea planting.`,
+          upcomingAr: `جهز خطوطاً جيدة الصرف في الأراضي الطميية أو الرملية استعداداً لزراعة الحمص الشتوي.`,
+        },
+        clover: {
+          nowEn: `Active multi-cut Berseem establishment window: Rapid autumn root nodulation fixes 120–220 kg N/ha, suppresses winter weeds, and restores soil organic matter across 4–5 forage cuts.`,
+          nowAr: `موعد تأسيس البرسيم المسقاوي متعدد الحشات: يثبت 120–220 كجم N/هكتار ويكبح الحشائش الشتوية ويجدد خصوبة ومادة التربة العضوية عبر 4–5 حشات.`,
+          upcomingEn: `Prepare level basins and secure certified Meskawi seed for next month's forage establishment.`,
+          upcomingAr: `جهز الأحواض المستوية وتقاوي البرسيم المسقاوي المعتمدة للزراعة الشهر المقبل.`,
+        },
+        potato: {
+          nowEn: `Autumn/Winter Nili tuber planting window (Oct 15 – Nov 10): Soil temperatures (${crop.tempOptMin}–${crop.tempOptMax}°C) favor rapid stolon initiation and bulking before Jan–Feb radiation frost nights (3.3°C min).`,
+          nowAr: `ميعاد زراعة البطاطس الشتوية/النيلية (15 أكتوبر – 10 نوفمبر): حرارة التربة (${crop.tempOptMin}–${crop.tempOptMax}°م) مثالية لتكوين الدرنات قبل ليالي الصقيع في يناير وفبراير (3.3°م).`,
+          upcomingEn: `Verify soil ECe (<1.7 dS/m), enforce a 3-year Solanaceae break, and pre-sprout certified seed tubers for upcoming planting.`,
+          upcomingAr: `تأكد من ملوحة التربة (<1.7 ديسيسيمنز/م) وتطبيق فاصل 3 سنوات بدون باذنجانيات قبل زراعة تقاوي البطاطس.`,
+        },
+        onion: {
+          nowEn: `Optimal Oct–Nov bulb transplanting window: Short-day winter photoperiod and cool temperatures (${crop.tempOptMin}–${crop.tempOptMax}°C) drive uniform vegetative growth; acts as a poor host for Meloidogyne nematodes.`,
+          nowAr: `موعد مثالي لشتل البصل الفتيل الشتوي (أكتوبر–نوفمبر): الحرارة المعتدلة (${crop.tempOptMin}–${crop.tempOptMax}°م) تدعم النمو الخضري وتكوين الأبصال، ويعمل كعائل ضعيف يحد من تكاثر نيماتودا التعقد.`,
+          upcomingEn: `Prepare nursery transplants and verify low soil salinity (ECe < 1.2 dS/m) for next month's Onion transplanting.`,
+          upcomingAr: `جهز شتلات البصل وتأكد من انخفاض ملوحة التربة (< 1.2 ديسيسيمنز/م) قبل موعد الشتل الشهر المقبل.`,
+        },
+        garlic: {
+          nowEn: `Autumn clove-planting window: Early establishment ensures strong root development and vernalization required for large, export-grade bulb division (400 mm ETc).`,
+          nowAr: `موعد تفصيص وزراعة الثوم البلدي: التبكير يضمن نمواً جذرياً قوياً واحتياجات البرودة اللازمة لتفصيص وكبر حجم الرؤوس التصديرية (400 ملم).`,
+          upcomingEn: `Sort healthy, nematode-free seed cloves for upcoming autumn Garlic planting.`,
+          upcomingAr: `افرز فصوص التقاوي السليمة الخالية من النيماتودا استعداداً لزراعة الثوم.`,
+        },
+        tomato: {
+          nowEn: `Active transplanting window (${monthNameEn}): Ambient temperatures (${crop.tempOptMin}–${crop.tempOptMax}°C) support flower truss setting and lycopene development; maintain strict 3-year rotation break from Potato.`,
+          nowAr: `نافذة شتل الطماطم مفتوحة خلال ${monthNameAr}: درجات الحرارة (${crop.tempOptMin}–${crop.tempOptMax}°م) تدعم عقد الأزهار والتلوين، مع الالتزام بفاصل 3 سنوات عن البطاطس.`,
+          upcomingEn: `Prepare drip laterals and virus-free nursery seedlings (TYLCV-resistant hybrids) for next month's transplanting.`,
+          upcomingAr: `جهز شبكات التنقيط وشتلات الهجن المقاومة لفيروس تجعد الأوراق استعداداً للشتل الشهر القادم.`,
+        },
+        maize: {
+          nowEn: `Early summer sowing window (May 15–30): Planting now ensures tasseling and silking complete before late-July/August extreme thermal peaks (42.8°C), protecting pollen viability.`,
+          nowAr: `التبكير الصيفي المثالي للذرة الشامية (15–30 مايو): الزراعة الآن تضمن إتمام التزهير والحريرة قبل ذروة موجات الحر في أواخر يوليو وأغسطس (42.8°م) لحماية حيوية اللقاح.`,
+          upcomingEn: `Incorporate preceding legume residues and prepare ridges for next month's summer Maize sowing (600 mm ETc).`,
+          upcomingAr: `افرم بقايا المحصول البقولي السابق وجهز الخطوط لزراعة الذرة الشامية الصيفية الشهر المقبل.`,
+        },
+        sorghum: {
+          nowEn: `Summer sowing window open: C4 physiology and deep fibrous roots (1.8 m) tolerate extreme heat (up to 40°C), soil salinity (6.8 dS/m), and limited canal water (420 mm ETc).`,
+          nowAr: `موعد زراعة الذرة الرفيعة الصيفية: جذورها العميقة (1.8 م) تتحمل الحرارة الشديدة (40°م) والملوحة (6.8 ديسيسيمنز/م) وشح المياه (420 ملم).`,
+          upcomingEn: `Upcoming summer window for heat- and drought-resilient Grain Sorghum (${crop.growingDays}-day cycle).`,
+          upcomingAr: `تقترب عروة زراعة الذرة الرفيعة المتحملة للحرارة والجفاف (${crop.growingDays} يوماً).`,
+        },
+        soybean: {
+          nowEn: `Optimal May summer planting window: Warm soil (${crop.tempOptMin}–${crop.tempOptMax}°C) and Bradyrhizobium japonicum inoculation fix 60–120 kg N/ha (20–38 kg N/ha net residual credit for subsequent winter crops).`,
+          nowAr: `الموعد المثالي لزراعة فول الصويا (مايو): دفء التربة والتلقيح البكتيري يثبتان 60–120 كجم N/هكتار (رصيد صافي 20–38 كجم N/هكتار للمحصول الشتوي التالي).`,
+          upcomingEn: `Secure Bradyrhizobium inoculant and defoliator scouting traps ahead of next month's Soybean sowing.`,
+          upcomingAr: `جهز لقاح العقدين المخصص لفول الصويا استعداداً للزراعة الصيفية الشهر المقبل.`,
+        },
+        sunflower: {
+          nowEn: `Summer oilseed sowing window: Short 105-day cycle and deep taproot (2.0 m) scavenge leached subsoil nitrates while saving 150 mm of water compared to summer Maize.`,
+          nowAr: `ميعاد زراعة دوار الشمس الزيتي: دورة قصيرة (105 أيام) وجذر وتدي عميق (2.0 م) يستعيد النترات العميقة ويوفر 150 ملم من المياه مقارنة بالذرة.`,
+          upcomingEn: `Prepare seedbeds for fast-maturing summer Sunflower (${crop.annualWaterMm} mm water requirement).`,
+          upcomingAr: `جهز الأرض لزراعة دوار الشمس الزيتي سريع النضج (${crop.annualWaterMm} ملم احتياج مائي).`,
+        },
+      };
+
+      const customGuidance = CROP_PLANTING_GUIDANCE[crop.id];
       const reasonEn = isNow
-        ? `Optimal planting window open in ${monthNameEn}. Local ambient temperatures match germination criteria.`
-        : `Upcoming sowing window starts next month. Seedbed preparation and certified seed procurement recommended.`;
+        ? customGuidance?.nowEn ||
+          `Optimal ${crop.name} sowing window in ${monthNameEn} (${crop.tempOptMin}–${crop.tempOptMax}°C optimal range, ${crop.growingDays}-day cycle, ${crop.annualWaterMm} mm seasonal water demand).`
+        : customGuidance?.upcomingEn ||
+          `Upcoming sowing window starts next month for ${crop.name} (${crop.growingDays}-day cycle). Seedbed preparation and certified seed procurement recommended.`;
 
       const reasonAr = isNow
-        ? `نافذة الزراعة المثالية مفتوحة الآن خلال شهر ${monthNameAr}. درجات الحرارة الحالية تطابق متطلبات الإنبات.`
-        : `تبدأ عروة زراعته الشهر المقبل. يوصى بتجهيز الأرض وشراء البذور والتقاوي المعتمدة من الآن.`;
+        ? customGuidance?.nowAr ||
+          `نافذة الزراعة المثالية لمحصول ${crop.arabicName} خلال شهر ${monthNameAr} (الحرارة المثلى ${crop.tempOptMin}–${crop.tempOptMax}°م، مدة النمو ${crop.growingDays} يوماً، الاحتياج المائي ${crop.annualWaterMm} ملم).`
+        : customGuidance?.upcomingAr ||
+          `تبدأ عروة زراعة ${crop.arabicName} الشهر المقبل (${crop.growingDays} يوماً). يوصى بتجهيز الأرض وتوفير التقاوي المعتمدة.`;
 
       results.push({
         crop,
