@@ -24,6 +24,7 @@ import {
 } from '../lib/nasa-power';
 import { generateRecommendations } from '../lib/recommendation-engine';
 import { DEFAULT_FARM_PROFILE } from '../lib/farm-store';
+import { AGRIPRICE_CROPS, getAgriPriceByCropId } from '../lib/agriprice-data';
 import type { FarmProfile } from '../lib/types';
 
 interface TestOutcome {
@@ -136,6 +137,18 @@ async function main() {
     assert(findCropByName('القمح')?.id === 'wheat', 'Arabic lookup failed');
     assert(findCropByName('Faba Bean')?.id === 'faba_bean', 'Faba Bean lookup failed');
     assert(findCropByName('NonExistentCropXYZ') === undefined, 'Unknown crop should return undefined');
+  });
+
+  runTest('ECON-01', 'Egyptian AgriPrice Economics', 'Contains official Cabinet IDSC farmgate prices and positive net feddan margins', () => {
+    assert(AGRIPRICE_CROPS.length >= 10, `Expected >= 10 priced crops, got ${AGRIPRICE_CROPS.length}`);
+    assert(getAgriPriceByCropId('wheat')?.farmgateTonEgp?.avg === 17075, 'Wheat farmgate avg must be 17,075 EGP/t');
+    assert(getAgriPriceByCropId('faba_bean')?.farmgateTonEgp?.avg === 40000, 'Faba Bean farmgate avg must be 40,000 EGP/t');
+    assert(getAgriPriceByCropId('potato')?.farmgateTonEgp?.avg === 15500, 'Potato farmgate avg must be 15,500 EGP/t');
+    assert(getAgriPriceByCropId('onion')?.farmgateTonEgp?.avg === 13250, 'Onion farmgate avg must be 13,250 EGP/t');
+    for (const c of AGRIPRICE_CROPS) {
+      const gross = (c.farmgateTonEgp?.avg || 0) * c.avgYieldTonPerFeddan.typical;
+      assert(gross > c.estimatedCostPerFeddanEgp, `Expected positive net margin per feddan for ${c.cropId}`);
+    }
   });
 
   // =========================================================================

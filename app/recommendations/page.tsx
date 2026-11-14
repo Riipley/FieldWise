@@ -22,6 +22,7 @@ import { getDemoClimateData } from '@/lib/nasa-power';
 import StrategyCard from '@/components/recommendations/StrategyCard';
 import ComparisonChart from '@/components/recommendations/ComparisonChart';
 import RegionalAndSeasonalCard from '@/components/recommendations/RegionalAndSeasonalCard';
+import AgriPriceMarketCard from '@/components/recommendations/AgriPriceMarketCard';
 import { useLanguage } from '@/lib/language-context';
 
 export default function RecommendationsPage() {
@@ -162,6 +163,11 @@ export default function RecommendationsPage() {
       {/* COMPARISON RADAR & SIDE-BY-SIDE MATRIX */}
       <div className="mb-12">
         <ComparisonChart strategies={strategies} />
+      </div>
+
+      {/* OFFICIAL EGYPTIAN AGRIPRICE MARKET DATA & FEDDAN PROFIT CALCULATOR */}
+      <div className="mb-12">
+        <AgriPriceMarketCard farmProfile={result.farmProfile} />
       </div>
 
       {/* METHODOLOGY & TRANSPARENCY DISCLOSURE */}

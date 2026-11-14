@@ -59,6 +59,18 @@ export const ACTIVE_FIELDWISE_DATASETS: NasaResourceItem[] = [
       'يوفر القيم المرجعية لتثبيت النيتروجين الحيوي للبقوليات (25–45 كجم N/هكتار للفول البلدي) وفترات كسر دورات الآفات غير العائلة المستخدمة في حساب بُعد النيتروجين (15%) والآفات (15%).',
   },
   {
+    id: 'egypt-agriprice',
+    name: 'Egyptian Cabinet IDSC Local Crop Prices (AgriPrice)',
+    agency: 'IDSC Egypt',
+    resolution: '27 Governorates • Farmgate, Wholesale & Retail (EGP/Ton)',
+    usageType: 'active_engine',
+    url: 'http://www.agriprice.gov.eg/local-prices',
+    howUsedEn:
+      'Supplies official Egyptian farmgate (أسعار الحقول: Wheat 17,075 EGP/t, Faba Bean 40,000 EGP/t, Potato 15,500 EGP/t, Onion 13,250 EGP/t) and wholesale prices powering Economic Return (10%) and the Feddan Net Profit Calculator.',
+    howUsedAr:
+      'يمد المحرك بأسعار الحقول والجملة الرسمية بمصر (القمح 17,075 ج/طن، الفول 40,000 ج/طن، البطاطس 15,500 ج/طن، البصل 13,250 ج/طن) لحساب بُعد العائد الاقتصادي (10%) وصافي ربح الفدان.',
+  },
+  {
     id: 'smap',
     name: 'NASA SMAP (Soil Moisture Active Passive)',
     agency: 'NASA Earthdata',
@@ -112,8 +124,8 @@ export default function NasaResourcesHub({ compact = false }: { compact?: boolea
         </div>
         <h2 className="text-xl sm:text-2xl font-extrabold text-stone-900 tracking-tight">
           {isAr
-            ? 'البنية العلمية والفضائية المعتمدة في الحسابات والتدقيق (6 مصادر فعلية)'
-            : 'Core Engine Inputs & Satellite Validation Layers (6 Active Sources)'}
+            ? 'البنية العلمية والفضائية والاقتصادية المعتمدة في الحسابات (7 مصادر فعلية)'
+            : 'Core Engine Inputs, Economic Pricing & Satellite Validation (7 Active Sources)'}
         </h2>
         <p className="text-xs sm:text-sm text-stone-600 mt-1">
           {isAr
