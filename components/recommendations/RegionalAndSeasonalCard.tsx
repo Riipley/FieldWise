@@ -78,26 +78,6 @@ export default function RegionalAndSeasonalCard({
                       {isAr ? item.crop.name : item.crop.arabicName} &bull; {item.crop.family}
                     </span>
                   </div>
-
-                  <span
-                    className={`text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shrink-0 ${
-                      isNow
-                        ? 'bg-emerald-500 text-stone-950 font-black animate-pulse'
-                        : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                    }`}
-                  >
-                    {isNow ? (
-                      <>
-                        <CheckCircle2 className="w-3 h-3 text-stone-950" />
-                        {isAr ? 'ازرع الآن' : 'Plant Now'}
-                      </>
-                    ) : (
-                      <>
-                        <Clock className="w-3 h-3 text-amber-300" />
-                        {isAr ? 'الشهر القادم' : 'Upcoming'}
-                      </>
-                    )}
-                  </span>
                 </div>
 
                 <div className="flex items-center gap-1.5 mb-2.5">
