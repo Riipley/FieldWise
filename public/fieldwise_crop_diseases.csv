@@ -1,0 +1,50 @@
+﻿المحصول,المرض,المسبب العلمي,الظروف البيئية والمناخية الملائمة للمرض,Crop_En,Pathogen_Group
+الفول البلدي,التبقع الشوكولاتي,Botrytis fabae,رطوبة عالية وبلل أوراق لعدة أيام، حرارة 15-28°م، تشتد في الجو المعتدل الرطب وكثافة النباتات,Faba bean,Fungus
+الفول البلدي,اللفحة الأسكوكيتية,Didymella fabae (Ascochyta fabae),طقس ممطر رطب وبلل الأوراق المتصل ورذاذ الأمطار,Faba bean,Fungus
+الفول البلدي,الصدأ,Uromyces viciae-fabae,دفء يقارب 20-25°م مع 6-18 ساعة من بلل الأوراق والندى الليلي,Faba bean,Fungus
+الفول البلدي,البياض الزغبي,Peronospora viciae f. sp. fabae,جو بارد رطب ورطوبة مرتفعة وبلل الأوراق,Faba bean,Oomycete
+الفول البلدي,العفن الأبيض,Sclerotinia sclerotiorum,جو معتدل مائل للبرودة ورطوبة مرتفعة وابتلال التربة والنبات,Faba bean,Fungus (Soil-borne)
+الفول البلدي,أعفان الجذور والبادرات,"Fusarium spp., Rhizoctonia solani, Pythium spp.",التغدق وسوء الصرف، والتربة الباردة المبتلة وانضغاط التربة,Faba bean,Fungus (Soil-borne)
+القمح,الصدأ الأصفر,Puccinia striiformis,بارد ورطب (13-24°م)، وتزداد الفرص عند 10-16°م وندى غزير,Wheat,Fungus (Air-borne)
+القمح,صدأ الأوراق,Puccinia triticina,رطوبة مرتفعة وحرارة معتدلة (18-25°م),Wheat,Fungus (Air-borne)
+القمح,صدأ الساق,Puccinia graminis,طقس دافئ ورطب متأخر في الموسم (20-30°م),Wheat,Fungus (Air-borne)
+القمح,البياض الدقيقي,Blumeria graminis f. sp. tritici,حرارة معتدلة (15-22°م) ورطوبة مرتفعة، ويزيد بالإفراط في التسميد النيتروجيني,Wheat,Fungus
+القمح,التفحم السائب,Ustilago tritici,عدوى مرتبطة بالبذور وتحدث أثناء التزهير في جو رطب,Wheat,Fungus (Seed-borne)
+القمح,التفحم الشائع,Tilletia foetida / T. caries,ظروف باردة ورطبة وقت الإنبات الأولي للبادرات,Wheat,Fungus (Seed/Soil)
+القمح,عفن الجذور والقاعدة الفيوزاريومي,Fusarium spp.,تتأثر برطوبة وحرارة التربة، الدفء مع إجهاد مائي وتكرار زراعة النجيليات,Wheat,Fungus (Soil-borne)
+القمح,الإرغوت (الأرجوت),Claviceps purpurea,يرتبط بفترة تزهير باردة رطبة ووجود الحشائش النجيلية العائلة,Wheat,Fungus
+القمح,عفن الجذور الشائع,Bipolaris sorokiniana,ظروف التربة الدافئة مع الإجهاد المائي وسوء التغذية,Wheat,Fungus (Soil-borne)
+القمح,مرض التدهور العام (تيك-أول),Gaeumannomyces tritici,بقاء المسبب في التربة وتوالي النجيليات (قمح خلف قمح)، قلوي خفيف، رطب,Wheat,Fungus (Soil-borne)
+الشعير,البياض الشبكي,Pyrenophora teres,رطوبة مرتفعة وبلل الأوراق نحو 10-25°م وبقايا المحصول المصاب,Barley,Fungus
+الشعير,التبقع / اللفحة البنية,Bipolaris sorokiniana,دفء مع رطوبة ملائمة ويزيد الضرر مع إجهاد النبات المائي,Barley,Fungus
+الشعير,التبقع / اللفحة السلمية,Rhynchosporium commune,جو بارد رطب ومطر أو ابتلال طويل للأوراق تقريبا 4-25°م,Barley,Fungus
+الشعير,صدأ الأوراق,Puccinia hordei,اعتدال الحرارة مع ندى أو رطوبة مرتفعة غالبا 16-22°م,Barley,Fungus
+الشعير,البياض الدقيقي,Blumeria graminis f. sp. hordei,جو معتدل ورطوبة جوية مرتفعة غالبا 15-22°م، ولا يحتاج ماء حر على الورقة,Barley,Fungus
+الشعير,عفن الجذور والتاج,Fusarium spp.,الدفء وإجهاد الماء قد يزيدان الضرر، يعيش في التربة وبقايا المحصول السابق,Barley,Fungus (Soil-borne)
+الشعير,لفحة السنابل,Fusarium spp.,طقس دافئ ورطب وابتلال مستمر وقت التزهير,Barley,Fungus
+الشعير,التفحم السائب,Ustilago nuda,عدوى داخل البذرة، تتأثر بظروف الإزهار وتكوين البذور,Barley,Fungus (Seed-borne)
+الذرة الشامية,لفحة الأوراق,Helminthosporium maydis / Setosphaeria turcica,الرطوبة العالية ووجود بقايا نباتية مصابة ودفء 20-30°م,Maize,Fungus
+الذرة الشامية,تبقع الأوراق الرمادي,Cercospora zeae-maydis,الرطوبة النسبية العالية (>90%) والغيوم والحرارة الدافئة,Maize,Fungus
+الذرة الشامية,الصدأ الشائع,Puccinia sorghi,الحرارة المعتدلة (16-25°م) والرطوبة المرتفعة,Maize,Fungus
+الذرة الشامية,أعفان الكيزان والسيقان,Fusarium و Aspergillus,الإصابات الحشرية (حفارات)، الظروف الحارة الرطبة والتخزين السيء,Maize,Fungus
+الذرة الشامية,تفحم الذرة,Ustilago maydis,الرطوبة والجروح وتوافر الجراثيم في التربة والري الزائد,Maize,Fungus (Soil-borne)
+الذرة الشامية,البياض الزغبي,Peronosclerospora spp.,الرطوبة المرتفعة واعتدال الحرارة والضباب في الصباح الباكر,Maize,Oomycete
+الذرة الشامية,الذبول المتأخر (الشلل),Cephalosporium maydis (Harpophora maydis),تراكم الفطر في التربة وتكرار زراعة الذرة وسوء الصرف، ويظهر غالبا بعد التزهير,Maize,Fungus (Soil-borne)
+عباد الشمس,تبقع الأوراق/اللفحة الألترنارية,Alternaria helianthi,الرطوبة وبلل الأوراق والطقس الدافئ، كثافة المجموع الخضري,Sunflower,Fungus
+عباد الشمس,البياض الزغبي,Plasmopara halstedii,التربة المشبعة بالماء والطقس البارد الرطب وقت الإنبات,Sunflower,Oomycete (Soil-borne)
+عباد الشمس,الصدأ,Puccinia helianthi,الرطوبة واعتدال الحرارة (20-26°م) ووجود أوراق مبتلة,Sunflower,Fungus
+عباد الشمس,عفن الساق والقرص الزهري الأبيض,Sclerotinia sclerotiorum,رطوبة عالية وبلل الأنسجة والتربة، ودرجات حرارة معتدلة نسبيًا (15-22°م),Sunflower,Fungus (Soil-borne)
+عباد الشمس,ذبول الفرتيسيليوم,Verticillium dahliae,ممرض ترابي يستوطن التربة، يزداد مع تكرار زراعة العوائل الحساسة كالبطاطس والقطن,Sunflower,Fungus (Soil-borne)
+عباد الشمس,العفن الفحمى,Macrophomina phaseolina,يزداد بقوة مع الحرارة العالية والجفاف والإجهاد المائي وقت تكوين البذور,Sunflower,Fungus (Soil-borne)
+عباد الشمس,تبقع/اسوداد الساق الفوماوي,Plenodomus lindquistii (Phoma macdonaldii),الرطوبة والأمطار وبقايا المحصول المصابة والحشرات الناقلة,Sunflower,Fungus
+عباد الشمس,تبقع الأوراق السبتوري,Septoria helianthi,يرتبط ببلل الأوراق والرطوبة المرتفعة,Sunflower,Fungus
+عباد الشمس,عفن القرص الزهري الرمادي/الريزوبسي,Botrytis cinerea / Rhizopus spp.,الرطوبة العالية والأمطار أو الري الرذاذي الذي يبلل الأقراص، والجروح وتأخر الجفاف,Sunflower,Fungus
+فول الصويا,تبقع عين الضفدع,Cercospora sojina,جو دافئ رطب غالبا 25-30°م ورطوبة نسبية مرتفعة جدا >90% وبلل الأوراق,Soybean,Fungus
+فول الصويا,تبقع الأوراق البني,Septoria glycines,الرطوبة والأمطار وتبلل الأوراق، خاصة في المجموع الخضري الكثيف,Soybean,Fungus
+فول الصويا,صدأ فول الصويا الآسيوي,Phakopsora pachyrhizi,حرارة معتدلة تقريبا 15-28°م، رطوبة نسبية أعلى من 90% وبلل ورقي متصل نحو 6 ساعات أو أكثر,Soybean,Fungus
+فول الصويا,العفن الفحمي,Macrophomina phaseolina,يزداد في الجو الحار الجاف ومع إجهاد العطش والحرارة وضعف الجذور,Soybean,Fungus (Soil-borne)
+فول الصويا,عفن الجذور والساق الفيتوفتوري,Phytophthora sojae,تشبع التربة بالماء وسوء الصرف والتربة الثقيلة، خاصة بعد الأمطار أو الري الزائد,Soybean,Oomycete (Soil-borne)
+فول الصويا,أعفان الجذور والبادرات,"Pythium spp., Rhizoctonia solani, Fusarium spp.",رطوبة التربة الزائدة وسوء الصرف وبرودة التربة تزيد أعفان البادرات,Soybean,Fungus (Soil-borne)
+فول الصويا,البياض الزغبي,Peronospora manshurica,طقس رطب وبلل الأوراق ودرجات حرارة معتدلة (20-22°م),Soybean,Oomycete
+فول الصويا,اللفحة البكتيرية,Pseudomonas savastanoi pv. glycinea,الطقس البارد إلى المعتدل الممطر ورذاذ المطر وحبوب البرد والري بالرش,Soybean,Bacteria
+فول الصويا,التقرح البكتيري,Xanthomonas citri pv. glycines,الحرارة المرتفعة (30-33°م) والرطوبة ورذاذ المطر والري بالرش,Soybean,Bacteria

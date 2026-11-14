@@ -1,0 +1,7 @@
+﻿id,name_en,name_ar,hosts,break_years,severity,control
+take_all,Take-all,مرض التيك-أول (عفن قواعد الحبوب),wheat;barley,3,0.7,rotation_effective (المكافحة بالدورة فعالة جداً بفاصل نباتات عريضة الأوراق)
+cereal_cyst_nematode,Cereal cyst nematode,نيماتودا الحويصلات في الحبوب,wheat;barley,2,0.6,rotation_effective (المكافحة بالدورة تكسر دورة تكاثر الحويصلات)
+verticillium_dahliae,Verticillium wilt,الذبول الفرتسيليومي,sunflower;potato;cotton,4,0.8,rotation_partial (مكافحة جزئية؛ يتطلب دورة 4 سنوات واستبعاد الباذنجانيات والقطن)
+broomrape,Broomrape (Orobanche crenata),الهالوك (طفيل البقوليات),faba_bean,3,0.7,rotation_partial (مكافحة جزئية؛ تدوير مع محاصيل صائدة غير عائلة لتطهير بنك البذور)
+sclerotinia,Sclerotinia stem rot,العفن الأبيض (عفن الساق السكلروتيني),sunflower;soybean;faba_bean,4,0.8,rotation_partial (مكافحة جزئية؛ يتطلب إدخال نجيليات كالقمع والذرة لمدة 4 سنوات)
+charcoal_rot,Charcoal rot,العفن الفحمي,maize;soybean;sunflower,3,0.7,rotation_partial (يتطلب منع الإجهاد المائي الصيفي والتعاقب مع محاصيل شتوية وتسميد بوتاسي)
