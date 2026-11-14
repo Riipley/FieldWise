@@ -50,6 +50,7 @@ export default function FarmProfilePage() {
   const { t, isAr } = useLanguage();
   const [profile, setProfile] = useState<FarmProfile>(() => loadFarmProfile());
   const [isSaving, setIsSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     const existing = loadFarmProfile();
@@ -144,8 +145,51 @@ export default function FarmProfilePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
+
+    if (!profile.name || profile.name.trim().length === 0) {
+      setFormError(
+        isAr ? 'يرجى إدخال اسم المزرعة أو الحقل.' : 'Please enter a valid farm or parcel name.'
+      );
+      return;
+    }
+
+    if (
+      !Number.isFinite(profile.lat) ||
+      profile.lat < -90 ||
+      profile.lat > 90 ||
+      !Number.isFinite(profile.lng) ||
+      profile.lng < -180 ||
+      profile.lng > 180
+    ) {
+      setFormError(
+        isAr
+          ? 'إحداثيات غير صالحة: يجب أن يكون خط العرض بين -90 و 90 وخط الطول بين -180 و 180.'
+          : 'Invalid GPS coordinates: Latitude must be between -90 and 90, and Longitude between -180 and 180.'
+      );
+      return;
+    }
+
+    if (!Number.isFinite(profile.area) || profile.area <= 0 || profile.area > 100000) {
+      setFormError(
+        isAr
+          ? 'يرجى إدخال مساحة زراعية موجبة ومنطقية (من 0.1 إلى 100,000).'
+          : 'Please enter a valid positive farm area (between 0.1 and 100,000).'
+      );
+      return;
+    }
+
+    if (!Array.isArray(profile.currentCrops) || profile.currentCrops.length === 0) {
+      setFormError(
+        isAr
+          ? 'يرجى اختيار محصول واحد على الأقل من المحاصيل المزروعة حالياً.'
+          : 'Please select at least 1 current or recent crop in your baseline rotation.'
+      );
+      return;
+    }
+
     setIsSaving(true);
-    const updatedProfile = { ...profile, geoValidation };
+    const updatedProfile = { ...profile, name: profile.name.trim(), geoValidation };
     saveFarmProfile(updatedProfile);
     setTimeout(() => {
       router.push('/dashboard');
@@ -223,7 +267,7 @@ export default function FarmProfilePage() {
             onClick={() => handlePresetSelect('ismailia_egypt')}
             className="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-lg border border-emerald-300 font-semibold transition"
           >
-            🇪🇬 {isAr ? 'مصر (الإسماعيلية - 25 فدان)' : 'Ismailia, Egypt (25 feddans)'}
+            🇪🇬 {isAr ? 'مصر (الإسماعيلية - 5 فدان)' : 'Ismailia, Egypt (5 feddans)'}
           </button>
           <button
             type="button"
@@ -286,6 +330,19 @@ export default function FarmProfilePage() {
             <p className="text-xs text-rose-800 leading-relaxed">
               {isAr ? geoValidation.soilWarningMessageAr : geoValidation.soilWarningMessage}
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* FORM VALIDATION ERROR BANNER */}
+      {formError && (
+        <div className="mb-6 p-4 rounded-xl border border-rose-400 bg-rose-50 text-rose-900 shadow-xs flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-rose-800 mb-0.5">
+              {isAr ? 'خطأ في المدخلات' : 'Form Validation Error'}
+            </h4>
+            <p className="text-xs text-rose-800 leading-relaxed">{formError}</p>
           </div>
         </div>
       )}
@@ -367,11 +424,14 @@ export default function FarmProfilePage() {
                   <input
                     type="number"
                     step="0.0001"
+                    min="-90"
+                    max="90"
                     dir="ltr"
                     value={profile.lat}
-                    onChange={(e) =>
-                      setProfile({ ...profile, lat: parseFloat(e.target.value) || 0 })
-                    }
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setProfile({ ...profile, lat: Number.isNaN(val) ? 0 : val });
+                    }}
                     className="w-full text-sm font-mono px-3 py-2 rounded-lg border border-stone-300 bg-stone-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-emerald-500 text-left"
                     required
                   />
@@ -383,11 +443,14 @@ export default function FarmProfilePage() {
                   <input
                     type="number"
                     step="0.0001"
+                    min="-180"
+                    max="180"
                     dir="ltr"
                     value={profile.lng}
-                    onChange={(e) =>
-                      setProfile({ ...profile, lng: parseFloat(e.target.value) || 0 })
-                    }
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setProfile({ ...profile, lng: Number.isNaN(val) ? 0 : val });
+                    }}
                     className="w-full text-sm font-mono px-3 py-2 rounded-lg border border-stone-300 bg-stone-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-emerald-500 text-left"
                     required
                   />

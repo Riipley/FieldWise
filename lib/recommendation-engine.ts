@@ -1,4 +1,4 @@
-// FieldWise Recommendation and Agronomic Decision Engine (v2.2)
+// FieldWise Recommendation and Agronomic Decision Engine (v2.3)
 // Grounded in Agricultural Science, Complete Multi-Year Crop Calendars, and NASA POWER Climatology
 
 import type {
@@ -19,7 +19,7 @@ import { CROPS, getCropById } from './crop-database';
 import { validateCoordinates } from './geo-validator';
 
 // Base 8 Evaluation Dimension Weights (Sum = 1.00 / 100%)
-const BASE_WEIGHTS = {
+export const BASE_WEIGHTS = {
   climate: 0.15,
   water: 0.15,
   soil: 0.15,
@@ -41,11 +41,16 @@ const MONTH_NAMES_AR = [
 ];
 
 /**
- * Computes normalized dimension weights adjusted for farmer priorities.
+ * Computes normalized dimension weights adjusted for farmer priorities when custom priority subsets are chosen.
+ * When all 6 priorities or default priorities are selected, returns the canonical 15/15/15/15/15/10/10/5 weights.
  */
-function computeWeights(priorities: string[] = []) {
-  const w = { ...BASE_WEIGHTS };
+export function computeWeights(priorities: string[] = []) {
   const pLower = priorities.map((p) => p.toLowerCase());
+  if (pLower.length === 0 || pLower.length >= 6) {
+    return { ...BASE_WEIGHTS };
+  }
+
+  const w = { ...BASE_WEIGHTS };
 
   if (pLower.includes('water conservation')) {
     w.water += 0.05;
@@ -71,32 +76,32 @@ function computeWeights(priorities: string[] = []) {
   }
 
   const total = Object.values(w).reduce((s, v) => s + v, 0);
+  const c = parseFloat((w.climate / total).toFixed(2));
+  const wa = parseFloat((w.water / total).toFixed(2));
+  const so = parseFloat((w.soil / total).toFixed(2));
+  const ni = parseFloat((w.nitrogen / total).toFixed(2));
+  const pe = parseFloat((w.pest / total).toFixed(2));
+  const ec = parseFloat((w.economic / total).toFixed(2));
+  const ca = parseFloat((w.calendar / total).toFixed(2));
+  const su = parseFloat((1 - (c + wa + so + ni + pe + ec + ca)).toFixed(2));
+
   return {
-    climate: parseFloat((w.climate / total).toFixed(2)),
-    water: parseFloat((w.water / total).toFixed(2)),
-    soil: parseFloat((w.soil / total).toFixed(2)),
-    nitrogen: parseFloat((w.nitrogen / total).toFixed(2)),
-    pest: parseFloat((w.pest / total).toFixed(2)),
-    economic: parseFloat((w.economic / total).toFixed(2)),
-    calendar: parseFloat((w.calendar / total).toFixed(2)),
-    sustainability: parseFloat((1 - (
-      parseFloat((w.climate / total).toFixed(2)) +
-      parseFloat((w.water / total).toFixed(2)) +
-      parseFloat((w.soil / total).toFixed(2)) +
-      parseFloat((w.nitrogen / total).toFixed(2)) +
-      parseFloat((w.pest / total).toFixed(2)) +
-      parseFloat((w.economic / total).toFixed(2)) +
-      parseFloat((w.calendar / total).toFixed(2))
-    )).toFixed(2)),
+    climate: c,
+    water: wa,
+    soil: so,
+    nitrogen: ni,
+    pest: pe,
+    economic: ec,
+    calendar: ca,
+    sustainability: su,
   };
 }
 
 /**
- * Evaluates individual crop suitability against NASA POWER seasonal temperature regimes
- * during the crop's actual active growing months (from planting to harvest).
+ * Evaluates individual crop suitability against NASA POWER seasonal temperature,
+ * thermal extrema (T2M_MAX / T2M_MIN), and solar radiation during active growing months.
  */
 export function calculateCropClimateScore(crop: CropInfo, climate: NasaClimateData): number {
-  // Determine active months for the crop
   const activeMonths = new Set<number>();
   const startMonth = crop.plantingMonths[0] || 11;
   const endMonth = crop.harvestMonths[crop.harvestMonths.length - 1] || 4;
@@ -127,26 +132,42 @@ export function calculateCropClimateScore(crop: CropInfo, climate: NasaClimateDa
       ? Math.min(...monthlySlice.map((md) => md.meanTemp))
       : climate.annual.meanTemp - 6;
 
+  const seasonalSolar =
+    monthlySlice.length > 0
+      ? monthlySlice.reduce((s, md) => s + md.solarRad, 0) / monthlySlice.length
+      : climate.annual.meanSolarRad;
+
   let tempScore = 50;
   if (seasonalMeanTemp >= crop.tempOptMin && seasonalMeanTemp <= crop.tempOptMax) {
-    // Distance from exact midpoint of optimal range gives fine differentiation (86-96)
     const midOpt = (crop.tempOptMin + crop.tempOptMax) / 2;
     const halfSpan = Math.max(1, (crop.tempOptMax - crop.tempOptMin) / 2);
     const closeness = 1 - Math.min(1, Math.abs(seasonalMeanTemp - midOpt) / halfSpan);
-    tempScore = 86 + Math.round(closeness * 10);
+    tempScore = 85 + Math.round(closeness * 8);
   } else if (seasonalMeanTemp >= crop.tempMin && seasonalMeanTemp <= crop.tempMax) {
     if (seasonalMeanTemp < crop.tempOptMin) {
-      tempScore = 62 + 22 * ((seasonalMeanTemp - crop.tempMin) / Math.max(1, crop.tempOptMin - crop.tempMin));
+      tempScore = 66 + 20 * ((seasonalMeanTemp - crop.tempMin) / Math.max(1, crop.tempOptMin - crop.tempMin));
     } else {
-      tempScore = 62 + 22 * ((crop.tempMax - seasonalMeanTemp) / Math.max(1, crop.tempMax - crop.tempOptMax));
+      tempScore = 66 + 20 * ((crop.tempMax - seasonalMeanTemp) / Math.max(1, crop.tempMax - crop.tempOptMax));
     }
   } else {
     tempScore = 30;
   }
 
-  // Seasonal heat/cold stress checks
-  if (warmestMonthMean + 5 > crop.tempMax) tempScore -= 8;
-  if (coolestMonthMean - 4 < crop.tempMin) tempScore -= 8;
+  // Seasonal heat/cold stress checks against crop upper/lower thresholds
+  if (warmestMonthMean + 4 > crop.tempMax) tempScore -= 6;
+  if (coolestMonthMean - 3 < crop.tempMin) tempScore -= 6;
+
+  // Solar radiation PAR adequacy adjustment
+  if (seasonalSolar >= 18) tempScore += 2;
+  else if (seasonalSolar < 10) tempScore -= 5;
+
+  // Crop-specific sensitivity to desert radiation nights / tuberization heat (Potato & Onion)
+  if ((crop.id === 'potato' || crop.id === 'onion') && climate.annual.minTemp <= 4.0) {
+    tempScore -= 4;
+  }
+  if ((crop.id === 'faba_bean' || crop.id === 'sunflower') && climate.annual.maxTemp >= 41.0) {
+    tempScore -= 2;
+  }
 
   return Math.max(20, Math.min(98, Math.round(tempScore)));
 }
@@ -221,8 +242,9 @@ function assessDataConfidence(
 
 /**
  * Evaluates water availability, irrigation efficiency, and total rotational water conservation.
- * Produces dynamic, differentiated scores reflecting total seasonal water demand (mm/yr),
- * water savings vs baseline, irrigation efficiency, and crop drought/moisture sensitivity.
+ * Explicit Base Water Rule:
+ *   Water score = 60 − (avg annual demand − 900) × 0.13 − (5 if any single season > 550 mm)
+ * Plus dynamic adjustments when the user changes irrigation method (drip/sprinkler/rainfed) or water supply tier.
  */
 function evaluateWaterDimension(
   timeline: RotationTimelineSlot[],
@@ -233,23 +255,32 @@ function evaluateWaterDimension(
   const annualPrecip = climate.annual.totalPrecip;
   const climaticDeficit = climate.annual.annualDeficitMm ?? (annualPrecip - 1650);
 
-  // Calculate total rotational water demand per year (2 seasons/year)
   const yearsCount = Math.max(1, new Set(timeline.map((t) => t.year)).size);
   const totalWaterMm = timeline.reduce((sum, slot) => sum + slot.waterDemandMm, 0);
   const meanAnnualDemandMm = Math.round(totalWaterMm / yearsCount);
   const maxSeasonalDemandMm = Math.max(...timeline.map((s) => s.waterDemandMm));
 
-  // Reference baseline annual demand (Wheat 450 + Maize 600 = 1050 mm/yr)
   const baselineAnnualMm = 1050;
   const waterSavingsPct = Math.round(((baselineAnnualMm - meanAnnualDemandMm) / baselineAnnualMm) * 100);
 
-  // =====================================================================
-  // EXPLICIT WATER SCORE RULE (Item 2):
-  // Water score = 60 − (avg annual demand − 900) × 0.13 − (5 if any single season > 550 mm)
-  // =====================================================================
+  // Explicit Water Score Formula (calibrated on flood + scarce supply baseline)
   const peakPenalty = maxSeasonalDemandMm > 550 ? 5 : 0;
-  const rawWaterScore = 60 - (meanAnnualDemandMm - 900) * 0.13 - peakPenalty;
-  const score = Math.max(25, Math.min(95, Math.round(rawWaterScore)));
+  let rawWaterScore = 60 - (meanAnnualDemandMm - 900) * 0.13 - peakPenalty;
+
+  // Dynamic irrigation efficiency & water supply adjustments when non-default irrigation/supply is selected
+  let irrModifier = 0;
+  if (farm.irrigationMethod === 'drip') irrModifier += 8;
+  else if (farm.irrigationMethod === 'sprinkler') irrModifier += 4;
+  else if (farm.irrigationMethod === 'rainfed') {
+    irrModifier += annualPrecip >= 450 ? 6 : -14;
+  }
+
+  if (farm.waterAvailability === 'abundant') irrModifier += 5;
+  else if (farm.waterAvailability === 'adequate') irrModifier += 3;
+  else if (farm.waterAvailability === 'limited') irrModifier += 1;
+
+  rawWaterScore += irrModifier;
+  const score = Math.max(20, Math.min(95, Math.round(rawWaterScore)));
 
   const savingsTextEn =
     waterSavingsPct > 0
@@ -260,8 +291,17 @@ function evaluateWaterDimension(
       ? `توفر استهلاك المياه السنوي بنسبة ${waterSavingsPct}% (${meanAnnualDemandMm} ملم/سنة مقارنة بـ ${baselineAnnualMm} ملم/سنة لخط الأساس)`
       : `تتطلب ${meanAnnualDemandMm} ملم/سنة (أعلى من المرجع 900 ملم/سنة)`;
 
-  const justification = `Water score = 60 − (${meanAnnualDemandMm} − 900) × 0.13 ${peakPenalty > 0 ? '− 5 (single-season peak > 550 mm)' : ''} = ${score}%. Rotation ${savingsTextEn}. Under a climatic rainfall of ${annualPrecip} mm/yr and evaporative deficit of ${Math.abs(climaticDeficit)} mm/yr, flood irrigation (${farm.waterAvailability} supply) covers crop demand but at 50–60% efficiency.`;
-  const justificationAr = `قاعدة المياه: 60 − (${meanAnnualDemandMm} − 900) × 0.13 ${peakPenalty > 0 ? '− 5 (ذروة موسمية > 550 ملم)' : ''} = ${score}%. هذه الدورة ${savingsTextAr}. في ظل أمطار مناخية (${annualPrecip} ملم/سنة) وعجز تبخيري (${Math.abs(climaticDeficit)} ملم/سنة)، الري بالغمر (وفرة ${farm.waterAvailability}) يغطي الطلب بكفاءة 50–60%.`;
+  const irrEfficiencyTextEn =
+    farm.irrigationMethod === 'drip'
+      ? `drip irrigation (${farm.waterAvailability} supply) operates at ~85% application efficiency (+8 pts)`
+      : farm.irrigationMethod === 'sprinkler'
+      ? `sprinkler irrigation (${farm.waterAvailability} supply) operates at ~75% application efficiency (+4 pts)`
+      : farm.irrigationMethod === 'rainfed'
+      ? `rainfed regime relies strictly on ${annualPrecip} mm/yr precipitation`
+      : `flood irrigation (${farm.waterAvailability} supply) covers crop demand but at 50–60% efficiency`;
+
+  const justification = `Water score = 60 − (${meanAnnualDemandMm} − 900) × 0.13 ${peakPenalty > 0 ? '− 5 (single-season peak > 550 mm)' : ''}${irrModifier !== 0 ? ` ${irrModifier > 0 ? '+' : ''}${irrModifier} (irrigation/supply adjustment)` : ''} = ${score}%. Rotation ${savingsTextEn}. Under a climatic rainfall of ${annualPrecip} mm/yr and evaporative deficit of ${Math.abs(climaticDeficit)} mm/yr, ${irrEfficiencyTextEn}.`;
+  const justificationAr = `قاعدة المياه: 60 − (${meanAnnualDemandMm} − 900) × 0.13 ${peakPenalty > 0 ? '− 5 (ذروة موسمية > 550 ملم)' : ''}${irrModifier !== 0 ? ` ${irrModifier > 0 ? '+' : ''}${irrModifier} (تعديل كفاءة الري/الوفرة)` : ''} = ${score}%. هذه الدورة ${savingsTextAr}. في ظل أمطار مناخية (${annualPrecip} ملم/سنة) وعجز تبخيري (${Math.abs(climaticDeficit)} ملم/سنة).`;
 
   return { score, justification, justificationAr };
 }
@@ -269,73 +309,108 @@ function evaluateWaterDimension(
 /**
  * Evaluates soil compatibility, root architecture layering, pH constraints,
  * and heavy-clay drainage/harvestability penalties for tuber and bulb crops.
+ * If soil data is missing ('unknown'), explicitly communicates the limitation and applies a conservative score.
  */
 function evaluateSoilDimension(
   crops: CropInfo[],
   farm: FarmProfile
 ): { score: number; justification: string; justificationAr: string } {
-  let score = 68;
   const userSoil = (farm.soilType || 'unknown').toLowerCase();
+  const userPh = (farm.soilPH || 'unknown').toLowerCase();
 
-  // 1. Root architecture layering (shallow fibrous + medium nodulated taproot + deep taproot)
-  const hasDeepRoot = crops.some((c) => c.rootType.includes('1.5') || c.rootType.includes('2.0') || c.id === 'sunflower' || c.id === 'sorghum');
+  const hasDeepRoot = crops.some(
+    (c) => c.rootType.includes('1.8') || c.rootType.includes('2.0') || c.id === 'sunflower' || c.id === 'sorghum'
+  );
   const hasNodulatedTaproot = crops.some((c) => c.nitrogenFixation);
   const hasFibrous = crops.some((c) => c.rootType.includes('fibrous'));
+  const hasTuberOrBulb = crops.some((c) => c.id === 'potato' || c.id === 'onion' || c.id === 'garlic');
 
-  if (hasDeepRoot && hasNodulatedTaproot && hasFibrous) score += 14;
-  else if (hasNodulatedTaproot && hasFibrous) score += 8;
-  else score -= 4; // Continuous shallow/medium fibrous roots compact the plow pan
+  // If soil texture is Unknown/Untested, do NOT fabricate a high soil score
+  if (userSoil === 'unknown' || !userSoil) {
+    let conservativeScore = 54;
+    if (hasDeepRoot && hasNodulatedTaproot && hasFibrous) conservativeScore += 8;
+    else if (hasNodulatedTaproot && hasFibrous) conservativeScore += 4;
+    if (userPh === 'unknown' || !userPh) conservativeScore -= 6;
+    else if (userPh === 'acidic') conservativeScore -= 8;
+
+    return {
+      score: Math.max(35, Math.min(68, conservativeScore)),
+      justification: `LIMITATION: Soil texture is marked as Unknown/Untested${userPh === 'unknown' ? ' and Soil pH is Unknown' : ''}. Score is conservatively capped (${conservativeScore}%) based solely on root-depth architecture diversity; laboratory soil texture and ECe testing are required before committing to texture-sensitive crops.`,
+      justificationAr: `تنبيه نقص البيانات: قوام التربة غير محدد معملياً (Unknown)${userPh === 'unknown' ? ' ودرجة الحموضة غير معروفة' : ''}. تم تقييد الدرجة تحفظياً (${conservativeScore}%) بناءً على تنوع أعماق الجذور فقط؛ يلزم إجراء فحص معملي لقوام التربة والملوحة.`,
+    };
+  }
+
+  let score = 75;
+
+  // 1. Root architecture layering & crop sensitivity
+  if (hasDeepRoot && hasNodulatedTaproot && hasFibrous) {
+    // Tuber/bulb rotations have shallow-root salinity & common-scab sensitivity on neutral loam compared to resilient field crops
+    score += hasTuberOrBulb ? 9 : 15;
+  } else if (hasNodulatedTaproot && hasFibrous) {
+    score += 11;
+  } else {
+    score += 8; // Uniform fibrous rooting (e.g. Wheat–Maize)
+  }
 
   // 2. Soil texture compatibility & heavy-clay tuber/bulb penalty
-  const hasTuberOrBulb = crops.some((c) => c.id === 'potato' || c.id === 'onion' || c.id === 'garlic');
   let textureNoteEn = '';
   let textureNoteAr = '';
 
   if (userSoil === 'clay') {
     if (hasTuberOrBulb) {
-      // Significant agronomic penalty for scheduling Potato tubers and Onion bulbs in heavy Clay soil
       score -= 16;
-      textureNoteEn = ' Heavy Clay soil imposes a significant agronomic penalty (-16 pts) on Potato tubers and Onion bulbs due to restricted internal drainage, tuber deformity, clod adherence at harvest, and elevated Phytophthora/neck-rot risk; raised beds and gypsum/organic amendments are required.';
-      textureNoteAr = ' التربة الطينية الثقيلة تفرض خصماً زراعياً (-16 نقطة) عند زراعة درنات البطاطس ورؤوس البصل بسبب بطء الصرف الداخلي ومخاطر تشوه الدرنات وصعوبة التقليع والتصاق الطين؛ مما يستلزم الزراعة على مصاطب مرتفعة وإضافة الجبس الزراعي.';
+      textureNoteEn =
+        ' Heavy Clay soil imposes a significant agronomic penalty (-16 pts) on Potato tubers and Onion bulbs due to restricted internal drainage, tuber deformity, clod adherence at harvest, and elevated Phytophthora/neck-rot risk; raised beds and gypsum/organic amendments are required.';
+      textureNoteAr =
+        ' التربة الطينية الثقيلة تفرض خصماً زراعياً (-16 نقطة) عند زراعة درنات البطاطس ورؤوس البصل بسبب بطء الصرف الداخلي ومخاطر تشوه الدرنات وصعوبة التقليع والتصاق الطين؛ مما يستلزم الزراعة على مصاطب مرتفعة وإضافة الجبس الزراعي.';
     } else {
-      score += 6;
-      textureNoteEn = ' Heavy Clay soil is well-suited to fibrous cereals (Wheat/Maize), Faba Bean, and deep-taproot Sunflower which fractures compacted subsoil horizons.';
-      textureNoteAr = ' التربة الطينية الثقيلة تتوافق بامتياز مع القمح والذرة والفول البلدي، بينما تعمل جذور دوار الشمس الوتدية العميقة على تفكيك الطبقات التحتية الصماء.';
+      score += 2;
+      textureNoteEn =
+        ' Heavy Clay soil is well-suited to fibrous cereals (Wheat/Maize), Faba Bean, and deep-taproot Sunflower which fractures compacted subsoil horizons.';
+      textureNoteAr =
+        ' التربة الطينية الثقيلة تتوافق بامتياز مع القمح والذرة والفول البلدي، بينما تعمل جذور دوار الشمس الوتدية العميقة على تفكيك الطبقات التحتية الصماء.';
     }
-  } else if (userSoil && userSoil !== 'unknown') {
-    const matched = crops.filter((c) =>
-      c.soilPreferences.some((p) => p.toLowerCase().includes(userSoil) || userSoil.includes(p.toLowerCase()))
-    );
-    score += Math.round((matched.length / Math.max(1, crops.length)) * 10);
+  } else if (userSoil === 'sand') {
+    score -= hasNodulatedTaproot ? 4 : 8;
+    textureNoteEn =
+      ' Coarse Sandy soil exhibits rapid percolation and low cation-exchange capacity; frequent split fertigation and organic compost incorporation are essential.';
+    textureNoteAr =
+      ' التربة الرملية الخشنة سريعة الرشح ومنخفضة الاحتفاظ بالعناصر؛ يلزم تقسيم التسميد وإضافة الكمبوست العضوي.';
+  } else {
+    textureNoteEn = ` Friable ${farm.soilType} texture supports root exploration and balanced moisture retention.`;
+    textureNoteAr = ` قوام التربة (${farm.soilType}) يدعم انتشار الجذور وتوازن الرطوبة الأرضية.`;
   }
 
   // 3. Soil pH constraint checking
   let phNoteEn = '';
   let phNoteAr = '';
-  if (farm.soilPH === 'acidic') {
+  if (userPh === 'acidic') {
     score -= 10;
     phNoteEn = ' Acidic soil (<6.0) restricts phosphorus availability and inhibits Rhizobium nodulation in legumes.';
     phNoteAr = ' حموضة التربة (<6.0) تثبت الفوسفور وتقلل نشاط عقد الريزوبيا في البقوليات.';
-  } else if (farm.soilPH === 'alkaline') {
-    if (hasTuberOrBulb) score -= 4; // Potato scab and micronutrient lockup in alkaline soil
+  } else if (userPh === 'alkaline') {
+    score -= hasTuberOrBulb ? 6 : 2;
     phNoteEn = ' Alkaline soil (>7.5) requires chelated foliar micronutrients (Fe, Zn, Mn) and acidifying sulfate fertilizers.';
     phNoteAr = ' قلوية التربة (>7.5) تستلزم رش العناصر الصغرى المخلبية واستخدام الأسمدة الحامضية الكبريتية.';
-  } else if (farm.soilPH === 'neutral') {
+  } else if (userPh === 'neutral') {
     score += 2;
     phNoteEn = ' Neutral soil pH (6.0–7.5) provides optimal nutrient availability without requiring agricultural lime.';
     phNoteAr = ' درجة الحموضة المعتدلة (6.0–7.5) مثالية لامتصاص العناصر الغذائية ولا تتطلب إضافة جير زراعي.';
+  } else {
+    score -= 8;
+    phNoteEn = ' Soil pH is Unknown (-8 pts uncertainty adjustment); verify pH in laboratory before fertilizer selection.';
+    phNoteAr = ' درجة الحموضة (pH) غير معروفة (-8 نقاط تحوط)؛ يوصى بقياسها معملياً.';
   }
 
-  const clampedScore = Math.max(25, Math.min(94, Math.round(score)));
-  const justification = `Evaluated for ${farm.soilType || 'untested'} texture and ${farm.soilPH || 'unknown'} pH.${textureNoteEn}${phNoteEn}`;
-  const justificationAr = `تم التقييم لقوام التربة (${farm.soilType || 'غير مفحوص'}) ودرجة الحموضة (${farm.soilPH || 'غير محددة'}).${textureNoteAr}${phNoteAr}`;
+  const clampedScore = Math.max(25, Math.min(95, Math.round(score)));
+  const justification = `Evaluated for ${farm.soilType} texture and ${farm.soilPH || 'unknown'} pH.${textureNoteEn}${phNoteEn}`;
+  const justificationAr = `تم التقييم لقوام التربة (${farm.soilType}) ودرجة الحموضة (${farm.soilPH || 'غير محددة'}).${textureNoteAr}${phNoteAr}`;
 
   return { score: clampedScore, justification, justificationAr };
 }
 
 /**
  * Calculates biological nitrogen fixation (BNF) and nutrient cycling score across the full rotation cycle.
- * Differentiates strategies by cycle length (years/seasons), number of legume slots, and N uptake of non-legumes.
  */
 function evaluateNitrogenDimension(
   timeline: RotationTimelineSlot[],
@@ -354,8 +429,8 @@ function evaluateNitrogenDimension(
   if (legumes.length === 0) {
     return {
       score: 32,
-      justification: `0 of ${totalSeasons} seasonal slots include nitrogen-fixing legumes. Continuous cereal cropping causes net soil nitrogen depletion and requires 100% synthetic N fertilizer inputs (150–200 kg N/ha per season).`,
-      justificationAr: `0 من أصل ${totalSeasons} مواسم يتضمن محاصيل بقولية مثبتة للنيتروجين. يؤدي تعاقب الحبوب المستمر إلى استنزاف النيتروجين والاعتماد بنسبة 100% على الأسمدة الكيميائية (150–200 كغ N/هكتار للموسم).`,
+      justification: `0 of ${totalSeasons} seasonal slots include nitrogen-fixing legumes. Continuous non-legume cropping causes net soil nitrogen depletion and requires 100% synthetic N fertilizer inputs (150–200 kg N/ha per season).`,
+      justificationAr: `0 من أصل ${totalSeasons} مواسم يتضمن محاصيل بقولية مثبتة للنيتروجين. يؤدي تعاقب غير البقوليات المستمر إلى استنزاف النيتروجين والاعتماد بنسبة 100% على الأسمدة الكيميائية (150–200 كغ N/هكتار للموسم).`,
       analysis: {
         totalBnfRangeKgHa: '0 kg N/ha',
         residualAvailableKgHa: '0 kg N/ha (0 kg N/ha/yr)',
@@ -373,8 +448,8 @@ function evaluateNitrogenDimension(
     };
   }
 
-  // Acidic soil (<6.0) reduces BNF efficiency by ~30% unless limed
-  const phFactor = farm.soilPH === 'acidic' ? 0.72 : 1.0;
+  // Acidic soil (<6.0) reduces BNF efficiency by ~28% unless limed
+  const phFactor = farm.soilPH === 'acidic' ? 0.72 : farm.soilPH === 'unknown' ? 0.85 : 1.0;
 
   const totalMin = Math.round(legumes.reduce((s, l) => s + (l.bnfData?.totalMinKgHa ?? 40), 0) * phFactor);
   const totalMax = Math.round(legumes.reduce((s, l) => s + (l.bnfData?.totalMaxKgHa ?? 80), 0) * phFactor);
@@ -384,14 +459,20 @@ function evaluateNitrogenDimension(
   const annualizedResMin = Math.round(resMin / yearsCount);
   const annualizedResMax = Math.round(resMax / yearsCount);
 
-  // Calculate score based on: legume slot ratio, total cumulative residual N, diversity of N-fixers, and N-scavenging deep roots
-  const legumeSlotRatio = legumes.length / totalSeasons; // e.g., 1/4 = 0.25 or 2/8 = 0.25
+  const legumeSlotRatio = legumes.length / totalSeasons;
   const hasSummerAndWinterLegume = legumes.length >= 2;
   const hasDeepNitrateScavenger = crops.some((c) => c.id === 'sunflower' || c.id === 'sorghum');
 
-  let score = 52 + Math.round(legumeSlotRatio * 80) + (hasDeepNitrateScavenger ? 6 : 0) + (hasSummerAndWinterLegume ? 6 : 0);
+  let score =
+    56 +
+    Math.round(legumeSlotRatio * 80) +
+    (hasDeepNitrateScavenger ? 6 : 0) +
+    (hasSummerAndWinterLegume ? 6 : 0);
+
   if (farm.soilPH === 'acidic') score -= 8;
-  score = Math.max(40, Math.min(92, score));
+  else if (farm.soilPH === 'unknown') score -= 6;
+
+  score = Math.max(40, Math.min(94, score));
 
   const legumeNames = legumes.map((l) => l.name).join(' + ');
   const legumeNamesAr = legumes.map((l) => l.arabicName).join(' + ');
@@ -420,8 +501,7 @@ function evaluateNitrogenDimension(
 }
 
 /**
- * Evaluates pest and pathogen cycle interruption using strategy-specific host-pathogen rules.
- * Eliminates hardcoded cross-strategy text and ensures suppressed pathogens match the actual sequence.
+ * Evaluates pest and pathogen cycle interruption using host-pathogen rules and botanical family transitions.
  */
 function evaluatePestDimension(
   strategyLabel: RotationStrategy['label'],
@@ -438,23 +518,48 @@ function evaluatePestDimension(
   const yearsCount = new Set(timeline.map((t) => t.year)).size;
 
   if (strategyLabel === 'current') {
+    // Check if the user's current crops are a single-family monoculture or multi-family rotation
+    if (uniqueFamilies.size === 1) {
+      const soleFamily = Array.from(uniqueFamilies)[0] || 'Poaceae';
+      return {
+        score: 38,
+        justification: `Continuous ${soleFamily} cultivation (${totalSeasons} consecutive seasons across ${yearsCount} years) provides zero non-host break, perpetuating cereal take-all root rot, cyst nematodes, and stem borers.`,
+        justificationAr: `زراعة المحاصيل المتصلة من عائلة نباتية واحدة (${soleFamily} لـ ${totalSeasons} مواسم متتالية عبر ${yearsCount} سنوات) لا توفر أي فاصل نباتي غير عائل، مما يؤدي إلى توطن وتراكم أعفان الجذور ونيماتودا الحويصلات.`,
+        analysis: {
+          disruptedPathogens: [`Pathogen Risk: High — continuous ${soleFamily} sequence perpetuates host-specific pathogens`],
+          disruptedPathogensAr: ['خطر مرتفع — تعاقب نفس العائلة النباتية المستمر يحافظ على دورة حياة آفات وفطريات التربة'],
+          residualRisks: [
+            'High buildup risk of cereal take-all fungus (Gaeumannomyces graminis) and Fusarium crown rot',
+            'Carryover of cereal cyst nematode (Heterodera avenae) and maize stem borers (Sesamia cretica)',
+          ],
+          residualRisksAr: [
+            'مخاطر مرتفعة لتوطن فطر عفن قواعد القمح (Gaeumannomyces graminis) وأعفان التاج الفيوزاريومية',
+            'تراكم نيماتودا حويصلات الحبوب (Heterodera avenae) وثاقبات ساق الذرة ودودة الحشد الخريفية',
+          ],
+          rotationIntervalNote: 'Agronomic Deficit: Continuous Poaceae sequence (Wheat–Maize) violates the minimum 1-year non-cereal break rule required to suppress cereal root rots.',
+          rotationIntervalNoteAr: 'خلل بالدورة الزراعية: تعاقب القمح والذرة سنوياً يخالف قاعدة الفاصل غير النجيلي (سنة واحدة على الأقل) اللازم لكبح أعفان الجذور.',
+        },
+      };
+    }
+
+    // User selected a 2-family baseline (e.g., Legume + Cereal)
+    const disrupted = Array.from(new Set(crops.flatMap((c) => c.disruptedPathogens))).slice(0, 4);
+    const disruptedAr = Array.from(new Set(crops.flatMap((c) => c.disruptedPathogensAr))).slice(0, 4);
     return {
-      score: 38,
-      justification: `Continuous Poaceae cereal cultivation (${totalSeasons} consecutive grass seasons across ${yearsCount} years) provides zero non-host break, perpetuating cereal take-all root rot, cyst nematodes, and stem borers.`,
-      justificationAr: `زراعة المحاصيل النجيلية المتصلة (${totalSeasons} مواسم متتالية عبر ${yearsCount} سنوات) لا توفر أي فاصل نباتي غير عائل، مما يؤدي إلى توطن وتراكم أعفان جذور القمح ونيماتودا الحويصلات وثاقبات الذرة.`,
+      score: 72,
+      justification: `Alternates ${uniqueFamilies.size} botanical families (${Array.from(uniqueFamilies).join(', ')}) every season, interrupting single-family monoculture carryover, though repeating the same 2 crops every year still allows 1-year buildup of multi-year soilborne pathogens.`,
+      justificationAr: `يتبادل بين ${uniqueFamilies.size} عائلات نباتية في كل موسم، مما يحد من أمراض العائلة الواحدة، إلا أن تكرار نفس المحصولين سنوياً لا يحقق فاصل الـ 2–3 سنوات المطلوب للفطريات المعمرة.`,
       analysis: {
-        disruptedPathogens: ['Pathogen Risk: High — continuous Poaceae sequence perpetuates cereal pathogens'],
-        disruptedPathogensAr: ['خطر مرتفع — تعاقب النجيليات المستمر يحافظ على دورة حياة آفات وفطريات الحبوب'],
+        disruptedPathogens: disrupted.length > 0 ? disrupted : ['Partial suppression of single-family root rots'],
+        disruptedPathogensAr: disruptedAr.length > 0 ? disruptedAr : ['كبح جزئي لأعفان جذور العائلة الواحدة'],
         residualRisks: [
-          'High buildup risk of cereal take-all fungus (Gaeumannomyces graminis) and Fusarium crown rot',
-          'Carryover of cereal cyst nematode (Heterodera avenae) and maize stem borers (Sesamia cretica)',
+          'Annual repetition of the same winter/summer host every 12 months limits suppression of long-lived sclerotia and broomrape seedbanks',
         ],
         residualRisksAr: [
-          'مخاطر مرتفعة لتوطن فطر عفن قواعد القمح (Gaeumannomyces graminis) وأعفان التاج الفيوزاريومية',
-          'تراكم نيماتودا حويصلات الحبوب (Heterodera avenae) وثاقبات ساق الذرة ودودة الحشد الخريفية',
+          'تكرار نفس المحصول الشتوي أو الصيفي كل 12 شهراً لا يكفي لتطهير التربة من الأجسام الحجرية أو بذور الهالوك المعمرة',
         ],
-        rotationIntervalNote: 'Agronomic Deficit: Continuous Poaceae sequence (Wheat–Maize) violates the minimum 1-year non-cereal break rule required to suppress cereal root rots.',
-        rotationIntervalNoteAr: 'خلل بالدورة الزراعية: تعاقب القمح والذرة سنوياً يخالف قاعدة الفاصل غير النجيلي (سنة واحدة على الأقل) اللازم لكبح أعفان الجذور.',
+        rotationIntervalNote: `2-Family Seasonal Alternation: Better than single-family monoculture, but lacks multi-year non-host breaks.`,
+        rotationIntervalNoteAr: `تعاقب ثنائي العائلة: أفضل من الزراعة الأحادية، لكنه يفتقر إلى فواصل متعددة السنوات.`,
       },
     };
   }
@@ -535,13 +640,21 @@ function evaluateEconomicDimension(
   crops: CropInfo[]
 ): { score: number; justification: string; justificationAr: string } {
   const highValueCount = crops.filter((c) => c.economicValue === 'high').length;
-  const ratioHigh = highValueCount / Math.max(1, crops.length);
+  const mediumValueCount = crops.filter((c) => c.economicValue === 'medium').length;
+  const hortCount = crops.filter((c) => c.category === 'horticultural').length;
 
   if (strategyLabel === 'current') {
+    const dynamicCurrentScore = Math.min(88, 64 + highValueCount * 5 + hortCount * 3);
     return {
-      score: 64,
-      justification: 'Relies on bulk staple cereals (Wheat & Maize) with predictable government/local silo procurement but lower gross margins and high exposure to synthetic nitrogen fertilizer price inflation.',
-      justificationAr: 'تعتمد على حبوب تقليدية (القمح والذرة) ذات تسويق مضمون ولكن بهوامش ربح محدودة وتأثر شديد بارتفاع أسعار الأسمدة النيتروجينية الكيميائية.',
+      score: dynamicCurrentScore,
+      justification:
+        highValueCount === 0
+          ? 'Relies on bulk staple cereals (Wheat & Maize) with predictable government/local silo procurement but lower gross margins and high exposure to synthetic nitrogen fertilizer price inflation.'
+          : `Baseline incorporates ${highValueCount} high-value crop season(s), achieving a moderate-to-strong gross revenue profile (${dynamicCurrentScore}/100).`,
+      justificationAr:
+        highValueCount === 0
+          ? 'تعتمد على حبوب تقليدية (القمح والذرة) ذات تسويق مضمون ولكن بهوامش ربح محدودة وتأثر شديد بارتفاع أسعار الأسمدة النيتروجينية الكيميائية.'
+          : `يتضمن خط الأساس ${highValueCount} مواسم لمحاصيل عالية القيمة التسويقية (${dynamicCurrentScore}/100).`,
     };
   }
 
@@ -553,7 +666,7 @@ function evaluateEconomicDimension(
     };
   }
 
-  const score = Math.min(96, Math.round(84 + ratioHigh * 20));
+  const score = Math.min(96, Math.round(86 + (highValueCount / Math.max(1, crops.length)) * 20));
   return {
     score,
     justification: `Integrates two high-margin commercial export vegetables (Year 1 Potato and Year 3 Onion) alongside high-value pulses (Faba Bean, Soybean) and staple grains, generating the highest gross revenue potential per feddan (requires higher working capital and cold-storage access).`,
@@ -594,8 +707,7 @@ function evaluateCalendarDimension(
   if (hasSameSeasonCollision || !allYearsComplete) {
     score = 45;
   } else {
-    // Differentiate slightly by management complexity and turn-around buffer length
-    score = Math.min(95, Math.round(86 + avgPrepWeeks * 3 - (years.length > 2 ? 2 : 0)));
+    score = Math.min(95, Math.round(88.5 + avgPrepWeeks * 2.4 - (years.length > 2 ? 2 : 0)));
   }
 
   const justification =
@@ -618,18 +730,23 @@ function evaluateSustainabilityDimension(
   crops: CropInfo[]
 ): { score: number; justification: string; justificationAr: string } {
   const legumeCount = crops.filter((c) => c.nitrogenFixation).length;
-  const deepRoots = crops.filter((c) => c.rootType.includes('1.5') || c.rootType.includes('2.0') || c.id === 'sunflower' || c.id === 'sorghum').length;
+  const deepRoots = crops.filter(
+    (c) => c.rootType.includes('1.8') || c.rootType.includes('2.0') || c.id === 'sunflower' || c.id === 'sorghum'
+  ).length;
   const uniqueFamilies = new Set(crops.map((c) => c.family)).size;
 
-  if (strategyLabel === 'current') {
+  if (uniqueFamilies === 1 && legumeCount === 0) {
+    const monocultureScore = 48 + (deepRoots > 0 ? 4 : 0);
     return {
-      score: 48,
-      justification: 'High synthetic nitrogen footprint, low botanical biodiversity (1 family), and uniform root depth limit long-term soil organic carbon sequestration.',
-      justificationAr: 'البصمة الكربونية المرتفعة للأسمدة الكيميائية وغياب التنوع الحيوي (عائلة نباتية واحدة) يحدان من تراكم الكربون العضوي واستدامة التربة.',
+      score: monocultureScore,
+      justification:
+        'High synthetic nitrogen footprint, low botanical biodiversity (1 family), and uniform root depth limit long-term soil organic carbon sequestration.',
+      justificationAr:
+        'البصمة الكربونية المرتفعة للأسمدة الكيميائية وغياب التنوع الحيوي (عائلة نباتية واحدة) يحدان من تراكم الكربون العضوي واستدامة التربة.',
     };
   }
 
-  const score = Math.min(96, Math.max(40, 58 + legumeCount * 9 + deepRoots * 6 + uniqueFamilies * 4));
+  const score = Math.min(96, Math.max(48, 56 + legumeCount * 9 + deepRoots * 6 + uniqueFamilies * 5));
   const justification = `Combines ${uniqueFamilies} botanical families, ${legumeCount} biological nitrogen-fixing pulse season(s), and ${deepRoots} deep-rooted subsoil scavenger(s) to build soil organic matter and reduce agrochemical runoff.`;
   const justificationAr = `تجمع بين ${uniqueFamilies} عائلات نباتية و${legumeCount} موسم بقولي مثبت للنيتروجين و${deepRoots} محاصيل عميقة الجذور لبناء المادة العضوية وتقليل الانبعاثات الكيميائية.`;
 
@@ -638,6 +755,7 @@ function evaluateSustainabilityDimension(
 
 /**
  * Builds the complete 8-dimension transparent evaluation breakdown.
+ * Dynamically evaluates all 8 dimensions from the farm profile, climate data, and crop timeline.
  */
 function buildFullEvaluation(
   strategyLabel: RotationStrategy['label'],
@@ -646,12 +764,11 @@ function buildFullEvaluation(
   farm: FarmProfile,
   climate: NasaClimateData
 ) {
-  const weights = BASE_WEIGHTS;
+  const weights = computeWeights(farm.priorities);
 
-  // 1. Climate
+  // 1. Climate Suitability (15% base)
   const climateScores = crops.map((c) => calculateCropClimateScore(c, climate));
-  const rawClimate = Math.round(climateScores.reduce((a, b) => a + b, 0) / Math.max(1, climateScores.length));
-  const cScore = strategyLabel === 'current' ? 94 : strategyLabel === 'food_security' ? 91 : strategyLabel === 'horticultural' ? 89 : rawClimate;
+  const cScore = Math.round(climateScores.reduce((a, b) => a + b, 0) / Math.max(1, climateScores.length));
   const evalClimate: DimensionEvaluation = {
     key: 'climate',
     name: 'Climate Suitability',
@@ -659,13 +776,13 @@ function buildFullEvaluation(
     score: cScore,
     weight: weights.climate,
     contribution: parseFloat((cScore * weights.climate).toFixed(2)),
-    justification: `Season-matched evaluation across each crop's active growing months using NASA POWER climatology (Annual Mean: ${climate.annual.meanTemp}°C, Solar: ${climate.annual.meanSolarRad} MJ/m²/d).`,
-    justificationAr: `تقييم حراري موسمي يطابق أشهر النمو الفعلية لكل محصول مع سجلات ناسا المناخية (المتوسط السنوي: ${climate.annual.meanTemp}°م، الإشعاع: ${climate.annual.meanSolarRad} ميغاجول/م²/يوم).`,
+    justification: `Season-matched evaluation across each crop's active growing months using NASA POWER climatology (Annual Mean: ${climate.annual.meanTemp}°C, Max: ${climate.annual.maxTemp}°C, Min: ${climate.annual.minTemp}°C, Solar: ${climate.annual.meanSolarRad} MJ/m²/d).`,
+    justificationAr: `تقييم حراري موسمي يطابق أشهر النمو الفعلية لكل محصول مع سجلات ناسا المناخية (المتوسط السنوي: ${climate.annual.meanTemp}°م، العظمى: ${climate.annual.maxTemp}°م، الصغرى: ${climate.annual.minTemp}°م، الإشعاع: ${climate.annual.meanSolarRad} ميغاجول/م²/يوم).`,
   };
 
-  // 2. Water (Explicit Rule: 60 - (avg_annual_demand - 900) * 0.13 - (5 if any season > 550 mm))
+  // 2. Water & Demand (15% base — Explicit Rule: 60 - (avg_annual_demand - 900) * 0.13 - (5 if any season > 550 mm))
   const waterRes = evaluateWaterDimension(timeline, crops, farm, climate);
-  const wScore = strategyLabel === 'current' ? 36 : strategyLabel === 'food_security' ? 50 : strategyLabel === 'horticultural' ? 50 : waterRes.score;
+  const wScore = waterRes.score;
   const evalWater: DimensionEvaluation = {
     key: 'water',
     name: 'Water & Demand',
@@ -677,9 +794,9 @@ function buildFullEvaluation(
     justificationAr: waterRes.justificationAr,
   };
 
-  // 3. Soil
+  // 3. Soil & pH (15% base)
   const soilRes = evaluateSoilDimension(crops, farm);
-  const sScore = strategyLabel === 'current' ? 85 : strategyLabel === 'food_security' ? 92 : strategyLabel === 'horticultural' ? 86 : soilRes.score;
+  const sScore = soilRes.score;
   const evalSoil: DimensionEvaluation = {
     key: 'soil',
     name: 'Soil & pH',
@@ -691,9 +808,9 @@ function buildFullEvaluation(
     justificationAr: soilRes.justificationAr,
   };
 
-  // 4. Nitrogen
+  // 4. Nitrogen BNF (15% base)
   const nRes = evaluateNitrogenDimension(timeline, crops, farm);
-  const nScore = strategyLabel === 'current' ? 32 : strategyLabel === 'food_security' ? 82 : strategyLabel === 'horticultural' ? 88 : nRes.score;
+  const nScore = nRes.score;
   const evalNitrogen: DimensionEvaluation = {
     key: 'nitrogen',
     name: 'Nitrogen BNF',
@@ -705,9 +822,9 @@ function buildFullEvaluation(
     justificationAr: nRes.justificationAr,
   };
 
-  // 5. Pest
+  // 5. Pest & Pathogen Break (15% base)
   const pestRes = evaluatePestDimension(strategyLabel, timeline, crops);
-  const pScore = strategyLabel === 'current' ? 38 : strategyLabel === 'food_security' ? 86 : strategyLabel === 'horticultural' ? 94 : pestRes.score;
+  const pScore = pestRes.score;
   const evalPest: DimensionEvaluation = {
     key: 'pest',
     name: 'Pest & Pathogen Break',
@@ -719,9 +836,9 @@ function buildFullEvaluation(
     justificationAr: pestRes.justificationAr,
   };
 
-  // 6. Economic
+  // 6. Economic Return (10% base)
   const econRes = evaluateEconomicDimension(strategyLabel, crops);
-  const eScore = strategyLabel === 'current' ? 64 : strategyLabel === 'food_security' ? 78 : strategyLabel === 'horticultural' ? 96 : econRes.score;
+  const eScore = econRes.score;
   const evalEconomic: DimensionEvaluation = {
     key: 'economic',
     name: 'Economic Return',
@@ -733,9 +850,9 @@ function buildFullEvaluation(
     justificationAr: econRes.justificationAr,
   };
 
-  // 7. Calendar
+  // 7. Calendar Fit (10% base)
   const calRes = evaluateCalendarDimension(timeline);
-  const calScore = strategyLabel === 'current' ? 94 : strategyLabel === 'food_security' ? 94 : strategyLabel === 'horticultural' ? 92 : calRes.score;
+  const calScore = calRes.score;
   const evalCalendar: DimensionEvaluation = {
     key: 'calendar',
     name: 'Calendar Fit',
@@ -747,9 +864,9 @@ function buildFullEvaluation(
     justificationAr: calRes.justificationAr,
   };
 
-  // 8. Long-Term Resilience (unified naming per Item 13)
+  // 8. Long-Term Resilience (5% base)
   const sustRes = evaluateSustainabilityDimension(strategyLabel, crops);
-  const sustScore = strategyLabel === 'current' ? 48 : strategyLabel === 'food_security' ? 86 : strategyLabel === 'horticultural' ? 96 : sustRes.score;
+  const sustScore = sustRes.score;
   const evalSustainability: DimensionEvaluation = {
     key: 'sustainability',
     name: 'Long-Term Resilience',
@@ -815,7 +932,7 @@ export function detectRegionalFamousCrops(farm: FarmProfile): RegionalFamousCrop
   const results: RegionalFamousCrop[] = [];
   const add = (id: string, reasonEn: string, reasonAr: string, pop: number) => {
     const crop = getCropById(id);
-    if (crop) results.push({ crop, reason: reasonEn, reasonAr, popularityScore: pop });
+    if (crop) results.push({ crop, reason: reasonEn, reasonAr: reasonAr, popularityScore: pop });
   };
 
   if (isEgypt) {
@@ -824,7 +941,7 @@ export function detectRegionalFamousCrops(farm: FarmProfile): RegionalFamousCrop
     add('clover', 'Foundational winter forage legume restoring soil structure and fixing biological nitrogen.', 'البرسيم المصري المسقاوي رائد تجديد خصوبة الأراضي الطينية وإمداد الثروة الحيوانية بالعلف الأخضر.', 94);
     add('maize', 'Pillar summer cereal for domestic livestock feed and industrial food processing.', 'محصول الحبوب الصيفي الأهم للأمن الغذائي وتغذية الدواجن والمواشي.', 92);
     add('potato', 'Major export and high-value cash vegetable cultivated in Nili and winter seasons.', 'محصول الخضر التصديري والاستثماري الأول، ويجود في العروتين النيلية والشتوية بالأراضي الطميية والرملية.', 90);
-    add('onion', 'Premier commercial export bulb crop with root exudates that suppress soilborne pathogens.', 'محصول تصديري استراتيجي عالي الربحية تساعد إفرازات جذوره الكبريتية في كبح فطريات ونيماتودا التربة.', 88);
+    add('onion', 'Premier commercial export bulb crop; acts as a poor host for Meloidogyne spp., limiting nematode multiplication.', 'محصول تصديري استراتيجي عالي الربحية، ويُعد عائلاً ضعيفاً لنيماتودا تعقد الجذور (Meloidogyne) مما يحد من تكاثرها.', 88);
   } else if (isTunisia) {
     add('wheat', 'Premier northern Tunisian rainfed durum and bread wheat staple in the Medjerda basin.', 'محصول الحبوب الاستراتيجي الأبرز في سهول مجردة والشمال التونسي وبنزرت.', 96);
     add('faba_bean', 'Essential traditional winter pulse in rotation with cereal grain in the Tell.', 'البقولية التقليدية الأساسية في الدورة الزراعية مع الحبوب بالشمال التونسي.', 93);
@@ -978,7 +1095,6 @@ export function generateRecommendations(
 
   // =========================================================================
   // STRATEGY A: CURRENT FARM BASELINE (Complete 2-Year / 4-Season Cycle)
-  // Starts in Year 1 Winter -> Year 1 Summer -> Year 2 Winter -> Year 2 Summer
   // =========================================================================
   const timelineA: RotationTimelineSlot[] = [
     {
@@ -1065,13 +1181,19 @@ export function generateRecommendations(
 
   const cropsA = [currentWinterCrop, currentSummerCrop, currentWinterCrop, currentSummerCrop];
   const evalA = buildFullEvaluation('current', cropsA, timelineA, farm, climate);
+  const isDefaultWheatMaize = currentWinterCrop.id === 'wheat' && currentSummerCrop.id === 'maize';
+  const stratAWaterYr = currentWinterCrop.annualWaterMm + currentSummerCrop.annualWaterMm;
 
   const stratA: RotationStrategy = {
     id: 'strategy-a',
-    name: 'Current Farm Rotation — Maize ← Wheat (2-Year Cereal Baseline)',
-    nameAr: 'الدورة الحالية للمزرعة — ذرة ← قمح (خط الأساس الحبوبي - سنتان)',
+    name: isDefaultWheatMaize
+      ? 'Current Farm Rotation — Maize ← Wheat (2-Year Cereal Baseline)'
+      : `Current Farm Rotation — ${currentSummerCrop.name} ← ${currentWinterCrop.name} (2-Year Baseline)`,
+    nameAr: isDefaultWheatMaize
+      ? 'الدورة الحالية للمزرعة — ذرة ← قمح (خط الأساس الحبوبي - سنتان)'
+      : `الدورة الحالية للمزرعة — ${currentSummerCrop.arabicName} ← ${currentWinterCrop.arabicName} (خط الأساس - سنتان)`,
     label: 'current',
-    objective: 'Benchmark current continuous cereal management (4 seasons over 2 years), measuring water demand, synthetic N reliance, and pathogen carryover.',
+    objective: 'Benchmark current continuous farm management (4 seasons over 2 years), measuring water demand, synthetic N reliance, and pathogen carryover.',
     objectiveAr: 'تقييم خط الأساس للممارسات الحالية (4 عروات خلال سنتين) لقياس استهلاك المياه والاعتماد على السماد الكيميائي ومخاطر توطن الآفات.',
     timeline: timelineA,
     sequence: [
@@ -1102,32 +1224,40 @@ export function generateRecommendations(
       'عدم الحاجة لثلاجات تخزين مبرد أو سلاسل نقل سريعة للمحاصيل القابلة للتلف.',
     ],
     disadvantages: [
-      'Continuous Poaceae monoculture (4 consecutive grass seasons) depletes soil nitrogen, requiring 100% synthetic fertilizer inputs (0 kg N/ha biological credit).',
-      'High cumulative water demand (1,050 mm/yr across Winter Wheat + Summer Maize) with zero drought-scavenging break crops.',
+      `Annual water demand of ${stratAWaterYr.toLocaleString()} mm/yr across Winter ${currentWinterCrop.name} (${currentWinterCrop.annualWaterMm} mm) + Summer ${currentSummerCrop.name} (${currentSummerCrop.annualWaterMm} mm).`,
+      currentWinterCrop.nitrogenFixation || currentSummerCrop.nitrogenFixation
+        ? 'Repeating the same two crops every 12 months limits multi-year suppression of soilborne pathogens.'
+        : 'Continuous non-legume monoculture (4 consecutive seasons) depletes soil nitrogen, requiring 100% synthetic fertilizer inputs (0 kg N/ha biological credit).',
       'Accelerates soilborne take-all root rot (Gaeumannomyces graminis), cereal cyst nematodes, and stem borer carryover.',
     ],
     disadvantagesAr: [
-      'زراعة النجيليات المتصلة (4 عروات متتالية) تستنزف نيتروجين التربة وتتطلب تسميداً كيميائياً كاملاً (0 كغ N/هكتار تثبيت حيوي).',
-      'احتياج مائي سنوي مرتفع (1,050 ملم/سنة للقمح والذرة معاً) دون محاصيل موفرة للمياه.',
+      `احتياج مائي سنوي يبلغ ${stratAWaterYr.toLocaleString()} ملم/سنة (${currentWinterCrop.arabicName} ${currentWinterCrop.annualWaterMm} ملم + ${currentSummerCrop.arabicName} ${currentSummerCrop.annualWaterMm} ملم).`,
+      currentWinterCrop.nitrogenFixation || currentSummerCrop.nitrogenFixation
+        ? 'تكرار نفس المحصولين كل 12 شهراً يحد من كسر دورات الفطريات المعمرة في التربة.'
+        : 'زراعة النجيليات المتصلة (4 عروات متتالية) تستنزف نيتروجين التربة وتتطلب تسميداً كيميائياً كاملاً (0 كغ N/هكتار تثبيت حيوي).',
       'تزيد من تراكم فطريات عفن قواعد القمح (Take-all) ونيماتودا الحويصلات وثاقبات الذرة.',
     ],
     risks: [
-      'Declining nitrogen-use efficiency and plow-pan compaction at 25–30 cm depth from uniform fibrous rooting.',
+      'Declining nitrogen-use efficiency and plow-pan compaction at 25–30 cm depth from uniform rooting.',
       'High exposure to synthetic urea/ammonium nitrate price inflation.',
     ],
     risksAr: [
       'تراجع كفاءة استخدام السماد وتكون طبقة صماء على عمق 25–30 سم بسبب تماثل عمق الجذور الليفية.',
       'تأثر صافي الربح بارتفاع أسعار اليوريا ونترات الأمونيوم.',
     ],
-    explanation: `Option A achieves an overall score of ${evalA.overallScore}/100 (±4) (Climate: ${evalA.scores.climateSuitability}%, Water: ${evalA.scores.waterBalance}%, Soil: ${evalA.scores.soilHealth}%, Nitrogen: ${evalA.scores.nitrogenBalance}%, Pest: ${evalA.scores.pestDiversity}%, Economic: ${evalA.scores.economicProfitability}%, Calendar: ${evalA.scores.calendarFeasibility}%, Long-Term Resilience: ${evalA.scores.sustainability}%). Assumption: Current rotation unified to Maize ← Wheat (2-year cereal cycle) per specification item 6. Continuous Poaceae cropping provides 0 kg N/ha biological nitrogen fixation and perpetuates cereal pathogen cycles. Pathogen Risk: High — continuous Poaceae sequence perpetuates cereal pathogens.`,
-    explanationAr: `يحقق الخيار (أ) درجة ملاءمة إجمالية ${evalA.overallScore}/100 (±4) (المناخ: ${evalA.scores.climateSuitability}%، المياه: ${evalA.scores.waterBalance}%، التربة: ${evalA.scores.soilHealth}%، النيتروجين: ${evalA.scores.nitrogenBalance}%، الآفات: ${evalA.scores.pestDiversity}%، الاقتصاد: ${evalA.scores.economicProfitability}%، التقويم: ${evalA.scores.calendarFeasibility}%، الاستدامة طويلة المدى: ${evalA.scores.sustainability}%). افتراض: تم توحيد الدورة الحالية كدورة ذرة ← قمح (سنتان) وفقاً للبند 6. تعاقب النجيليات المستمر يوفر 0 كغ N/هكتار من النيتروجين الحيوي ويحافظ على دورات آفات الحبوب.`,
+    explanation: `Option A achieves an overall score of ${evalA.overallScore}/100 (±4) (Climate: ${evalA.scores.climateSuitability}%, Water: ${evalA.scores.waterBalance}%, Soil: ${evalA.scores.soilHealth}%, Nitrogen: ${evalA.scores.nitrogenBalance}%, Pest: ${evalA.scores.pestDiversity}%, Economic: ${evalA.scores.economicProfitability}%, Calendar: ${evalA.scores.calendarFeasibility}%, Long-Term Resilience: ${evalA.scores.sustainability}%). Assumption: Current rotation unified to ${currentSummerCrop.name} ← ${currentWinterCrop.name} (2-year cycle) per specification item 6. ${evalA.nitrogenAnalysis.residualAvailableKgHa.startsWith('0') ? 'Continuous Poaceae cropping provides 0 kg N/ha biological nitrogen fixation and perpetuates cereal pathogen cycles. Pathogen Risk: High — continuous Poaceae sequence perpetuates cereal pathogens.' : `Provides ${evalA.nitrogenAnalysis.residualAvailableKgHa} biological nitrogen credit.`}`,
+    explanationAr: `يحقق الخيار (أ) درجة ملاءمة إجمالية ${evalA.overallScore}/100 (±4) (المناخ: ${evalA.scores.climateSuitability}%، المياه: ${evalA.scores.waterBalance}%، التربة: ${evalA.scores.soilHealth}%، النيتروجين: ${evalA.scores.nitrogenBalance}%، الآفات: ${evalA.scores.pestDiversity}%، الاقتصاد: ${evalA.scores.economicProfitability}%، التقويم: ${evalA.scores.calendarFeasibility}%، الاستدامة طويلة المدى: ${evalA.scores.sustainability}%). افتراض: تم توحيد الدورة الحالية كدورة ${currentSummerCrop.arabicName} ← ${currentWinterCrop.arabicName} (سنتان) وفقاً للبند 6.`,
     dataLimitations: [
       'Baseline assumes standard regional synthetic fertilizer rates (160–220 kg N/ha); actual soil N balance requires laboratory testing.',
-      'NASA POWER represents gridded (~55 km meteorological / ~100 km solar) regional climatology.',
+      'NASA POWER represents gridded (~50 km) regional climatology.',
+      ...(farm.soilType === 'unknown' ? ['Soil texture is marked as Unknown; laboratory particle-size analysis is required.'] : []),
+      ...(farm.soilPH === 'unknown' ? ['Soil pH is marked as Unknown; laboratory pH measurement is required.'] : []),
     ],
     dataLimitationsAr: [
       'يفترض خط الأساس معدلات التسميد الإرشادية المعتادة؛ ويتطلب الرصيد الفعلي فحصاً معملياً للتربة.',
-      'بيانات ناسا تمثل شبكة مناخية إقليمية وليست محطة أرصاد داخل الحقل.',
+      'بيانات ناسا تمثل شبكة مناخية إقليمية (~50 كم) وليست محطة أرصاد داخل الحقل.',
+      ...(farm.soilType === 'unknown' ? ['قوام التربة غير معروف؛ يلزم إجراء فحص معملي لقوام التربة.'] : []),
+      ...(farm.soilPH === 'unknown' ? ['درجة حموضة التربة (pH) غير معروفة؛ يلزم قياسها معملياً.'] : []),
     ],
   };
 
@@ -1284,18 +1414,17 @@ export function generateRecommendations(
     dataLimitations: [
       'Net residual nitrogen (25–45 kg N/ha) assumes incorporation of nodulated roots and crop residues.',
       'Verify soil salinity (ECe < 3.5 dS/m) and available Olsen-P (>12 mg/kg) for optimal Faba Bean yield.',
+      ...(farm.soilType === 'unknown' ? ['Soil texture is marked as Unknown; laboratory particle-size analysis is required.'] : []),
     ],
     dataLimitationsAr: [
       'يفترض صافي النيتروجين المتبقي (25–45 كغ N/هكتار) فرم بقايا المحصول والجذور العقدية بالتربة.',
       'يوصى بالتحقق من ملوحة التربة (< 3.5 ديسيسيمنز/م) ومستوى الفوسفور الميسر لتحقيق أعلى إنتاجية للفول.',
+      ...(farm.soilType === 'unknown' ? ['قوام التربة غير معروف؛ يلزم إجراء فحص معملي لقوام التربة.'] : []),
     ],
   };
 
   // =========================================================================
   // STRATEGY C: HIGH-VALUE HORTICULTURAL CASH DIVERSIFICATION (Complete 4-Year / 8-Season Cycle)
-  // Enforces a mathematically true 3-year non-host break between Solanaceae (Potato in Y1;
-  // Years 2, 3, and 4 are non-Solanaceous = 3 full break years before Potato recurs in Year 5).
-  // Every year (Y1, Y2, Y3, Y4) includes BOTH Winter/Autumn and Summer seasons (8 slots total).
   // =========================================================================
   const cropPotato = getCropById('potato') || CROPS[8];
   const cropSorghum = getCropById('sorghum') || CROPS[5];
@@ -1531,11 +1660,11 @@ export function generateRecommendations(
       'فترة أرض عارية بعد حصاد البطاطس (فبراير–مايو، ~3 أشهر): إضافة محصول تغطية — كبيا علفي أو سماد أخضر صيفي (60–75 يوماً) لحماية التربة وإضافة المادة العضوية.',
     ],
     risks: [
-      'Salinity sensitivity: Potato (>1.7 dS/m) and Onion (>1.8 dS/m) suffer yield loss if irrigation water or soil ECe is elevated.',
+      'Salinity sensitivity: Potato (>1.7 dS/m) and Onion (>1.2 dS/m) suffer yield loss if irrigation water or soil ECe is elevated.',
       'Perishable vegetable market price volatility requires advance buyer contracts or cold-storage booking.',
     ],
     risksAr: [
-      'حساسية الملوحة: تتأثر إنتاجية البطاطس (>1.7 ديسيسيمنز/م) والبصل (>1.8 ديسيسيمنز/م) عند ارتفاع ملوحة التربة أو مياه الري.',
+      'حساسية الملوحة: تتأثر إنتاجية البطاطس (>1.7 ديسيسيمنز/م) والبصل (>1.2 ديسيسيمنز/م) عند ارتفاع ملوحة التربة أو مياه الري.',
       'تقلبات أسعار الخضر الطازجة تستلزم التعاقد التسويقي المسبق أو توفير ثلاجات حفظ.',
     ],
     explanation: `Option C achieves an overall score of ${evalC.overallScore}/100 (±4) (Climate: ${evalC.scores.climateSuitability}%, Water: ${evalC.scores.waterBalance}%, Soil: ${evalC.scores.soilHealth}%, Nitrogen: ${evalC.scores.nitrogenBalance}%, Pest: ${evalC.scores.pestDiversity}%, Economic: ${evalC.scores.economicProfitability}%, Calendar: ${evalC.scores.calendarFeasibility}%, Long-Term Resilience: ${evalC.scores.sustainability}%). It leads in Pest & Pathogen Interruption (${evalC.scores.pestDiversity}/100), Nutrient Dynamics (${evalC.scores.nitrogenBalance}/100), and Economic Profitability (${evalC.scores.economicProfitability}/100). CONDITIONAL on ECe test results. The 3-point gap between B and C is smaller than the uncertainty band (±4), so the ranking between them depends on the farmer's stated priorities.`,
@@ -1543,10 +1672,12 @@ export function generateRecommendations(
     dataLimitations: [
       'Potato and Onion performance depends on raised-bed tillage and verified ECe < 1.7 dS/m (Potato) and < 1.2 dS/m (Onion). Option C is CONDITIONAL on ECe test results before commitment.',
       'Economic score reflects gross revenue tier; net margin depends on local seed-potato tuber costs and farm-gate prices.',
+      ...(farm.soilType === 'unknown' ? ['Soil texture is marked as Unknown; laboratory particle-size analysis is required.'] : []),
     ],
     dataLimitationsAr: [
-      'نجاح البطاطس والبصل في الأراضي الطينية يشترط الزراعة على مصاطب جيدة الصرف والتحقق من أن ملوحة التربة أقل من 1.7 ديسيسيمنز/م.',
+      'نجاح البطاطس والبصل يشترط الزراعة على مصاطب جيدة الصرف والتحقق من أن ملوحة التربة أقل من 1.7 ديسيسيمنز/م للبطاطس و1.2 ديسيسيمنز/م للبصل.',
       'يعكس المؤشر الاقتصادي مستوى العائد الإجمالي؛ ويعتمد صافي الربح على أسعار تقاوي البطاطس المعتمدة وأسعار السوق.',
+      ...(farm.soilType === 'unknown' ? ['قوام التربة غير معروف؛ يلزم إجراء فحص معملي لقوام التربة.'] : []),
     ],
   };
 

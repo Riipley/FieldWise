@@ -6,6 +6,7 @@ export const CROPS: CropInfo[] = [
     id: 'wheat',
     name: 'Wheat',
     arabicName: 'القمح',
+    scientificName: 'Triticum aestivum L.',
     category: 'field_crop',
     family: 'Poaceae',
     familyAr: 'النجيلية (Poaceae)',
@@ -37,6 +38,11 @@ export const CROPS: CropInfo[] = [
     compatibleAfter: ['faba_bean', 'soybean', 'chickpea', 'potato', 'sunflower', 'onion', 'maize'],
     incompatibleAfter: ['wheat', 'barley'],
     minimumBreakYears: 1,
+    scientificReferences: [
+      'FAO Irrigation & Drainage Paper No. 56 (Allen et al., 1998) — Wheat ETc & Kc tables',
+      'FAO GAEZ v4 Crop Suitability & Maas-Hoffman Salinity Threshold (ECe = 6.0 dS/m)',
+      'ARC / MALR Egypt National Wheat Campaign Technical Bulletin',
+    ],
     notes:
       'Premier winter staple cereal in Mediterranean and Nile basins. Consumes 90-140 kg N/ha from the soil. Requires a dicot break crop (legume or oilseed) to prevent take-all (Gaeumannomyces graminis) accumulation.',
     notesAr:
@@ -46,6 +52,7 @@ export const CROPS: CropInfo[] = [
     id: 'barley',
     name: 'Barley',
     arabicName: 'الشعير',
+    scientificName: 'Hordeum vulgare L.',
     category: 'field_crop',
     family: 'Poaceae',
     familyAr: 'النجيلية (Poaceae)',
@@ -72,13 +79,17 @@ export const CROPS: CropInfo[] = [
     salinityToleranceDsM: 8.0,
     pests: ['cereal aphids', 'barley thrips'],
     diseases: ['net blotch (Pyrenophora teres)', 'scald', 'powdery mildew'],
-    disruptedPathogens: ['potato cyst nematode', 'solanaceous wilt'],
-    disruptedPathogensAr: ['نيماتودا حويصلات البطاطس', 'أمراض الذبول البكتيري'],
+    disruptedPathogens: ['solanaceous bacterial wilt (Ralstonia solanacearum)'],
+    disruptedPathogensAr: ['أمراض الذبول البكتيري في الباذنجانيات'],
     compatibleAfter: ['faba_bean', 'chickpea', 'sunflower', 'onion'],
     incompatibleAfter: ['barley', 'wheat'],
     minimumBreakYears: 1,
+    scientificReferences: [
+      'FAO Irrigation & Drainage Paper No. 56 (Allen et al., 1998) — Barley ETc & salinity tolerance (ECe = 8.0 dS/m)',
+      'ICARDA Dryland Barley Agronomy Manual',
+    ],
     notes:
-      'Highly drought and salinity tolerant winter cereal. Excellent choice for salt-affected soils or marginal water regimes.',
+      'Highly drought and salinity tolerant winter cereal (ECe threshold up to 8.0 dS/m). Excellent choice for salt-affected soils or marginal water regimes.',
     notesAr:
       'أعلى محاصيل الحبوب تحملاً للملوحة (حتى 8 ديسيسيمنز/م) والجفاف، ومثالي للأراضي الهامشية أو عند شح مياه الري في نهاية الموسم.',
   },
@@ -86,6 +97,7 @@ export const CROPS: CropInfo[] = [
     id: 'faba_bean',
     name: 'Faba Bean',
     arabicName: 'الفول البلدي',
+    scientificName: 'Vicia faba L.',
     category: 'field_crop',
     family: 'Fabaceae',
     familyAr: 'البقولية (Fabaceae)',
@@ -115,16 +127,21 @@ export const CROPS: CropInfo[] = [
     soilPreferences: ['clay', 'clay-loam', 'loam', 'neutral-to-alkaline'],
     minPH: 6.5,
     maxPH: 8.2,
-    salinityToleranceDsM: 3.5,
+    salinityToleranceDsM: 1.6,
     pests: ['black bean aphid (Aphis fabae)', 'broad bean beetle (Bruchus rufimanus)'],
-    diseases: ['chocolate spot (Botrytis fabae)', 'rust (Uromyces viciae-fabae)'],
+    diseases: ['chocolate spot (Botrytis fabae)', 'rust (Uromyces viciae-fabae)', 'broomrape (Orobanche crenata)'],
     disruptedPathogens: ['Gaeumannomyces graminis (Take-all)', 'Heterodera avenae (cereal cyst)'],
     disruptedPathogensAr: ['فطر تأكل جذور الحبوب (Take-all)', 'نيماتودا حويصلات الحبوب النجيلية'],
     compatibleAfter: ['wheat', 'barley', 'maize', 'potato', 'sorghum'],
     incompatibleAfter: ['faba_bean', 'chickpea', 'soybean', 'clover'],
     minimumBreakYears: 2,
+    scientificReferences: [
+      'Peoples et al. (2009, Symbiosis 48:1–17) — Biological nitrogen fixation & net residual N credit',
+      'ARC / MALR Egypt Legume Research Section — Orobanche-tolerant cultivars Giza 843 & Misr 3',
+      'FAO-56 Crop Water Requirements (Allen et al., 1998)',
+    ],
     notes:
-      'Premier nitrogen-fixing legume in the Nile Valley. Fixes 80-150 kg N/ha under optimal Rhizobium leguminosarum symbiosis; net residual credit to subsequent maize or summer crop is 25-45 kg N/ha.',
+      'Premier nitrogen-fixing legume in the Nile Valley. Fixes 80-150 kg N/ha under optimal Rhizobium leguminosarum symbiosis; net residual credit to subsequent maize or summer crop is 25-45 kg N/ha. Resistant/tolerant cultivars Giza 843 and Misr 3 are recommended for Orobanche crenata management.',
     notesAr:
       'أفضل محصول بقولي شتوي لتخصيب التربة في حوض النيل وشمال إفريقيا. يثبت 80-150 كغ N/هكتار حيوياً ويوفر رصيداً صافياً للمحصول الصيفي التالي مقداره 25-45 كغ N/هكتار، مع كسر حاسم لأعفان جذور القمح.',
   },
@@ -132,6 +149,7 @@ export const CROPS: CropInfo[] = [
     id: 'chickpea',
     name: 'Chickpea',
     arabicName: 'الحمص',
+    scientificName: 'Cicer arietinum L.',
     category: 'field_crop',
     family: 'Fabaceae',
     familyAr: 'البقولية (Fabaceae)',
@@ -169,6 +187,10 @@ export const CROPS: CropInfo[] = [
     compatibleAfter: ['wheat', 'barley', 'maize', 'sorghum'],
     incompatibleAfter: ['chickpea', 'faba_bean', 'lentil'],
     minimumBreakYears: 3,
+    scientificReferences: [
+      'Unkovich et al. (2008, ACIAR Monograph 136) — Measuring plant-associated nitrogen fixation',
+      'FAO-56 Crop Evapotranspiration (Allen et al., 1998)',
+    ],
     notes:
       'Drought-tolerant winter pulse. Highly sensitive to waterlogging and acidic soils (pH < 6.0 severely restricts Mesorhizobium nodulation and available P). Fixes 40-80 kg N/ha; net residual N to subsequent crops is 15-28 kg N/ha.',
     notesAr:
@@ -178,6 +200,7 @@ export const CROPS: CropInfo[] = [
     id: 'maize',
     name: 'Maize (Corn)',
     arabicName: 'الذرة الشامية',
+    scientificName: 'Zea mays L.',
     category: 'field_crop',
     family: 'Poaceae',
     familyAr: 'النجيلية (Poaceae)',
@@ -202,15 +225,19 @@ export const CROPS: CropInfo[] = [
     minPH: 5.8,
     maxPH: 7.8,
     salinityToleranceDsM: 2.5,
-    pests: ['fall armyworm (Spodoptera frugiperda)', 'corn borer (Ostrinia nubilalis)'],
-    diseases: ['maize leaf blight', 'common smut', 'stalk rot'],
-    disruptedPathogens: ['Fusarium solani (pulse wilt)', 'potato cyst nematode'],
-    disruptedPathogensAr: ['فطريات ذبول البقوليات', 'نيماتودا الحويصلات في الخضروات'],
+    pests: ['fall armyworm (Spodoptera frugiperda)', 'corn borer (Ostrinia nubilalis, Sesamia cretica)'],
+    diseases: ['maize leaf blight', 'common smut', 'stalk rot', 'late wilt (Cephalosporium maydis)'],
+    disruptedPathogens: ['Fusarium solani (pulse wilt)', 'Verticillium dahliae (solanaceous strain)'],
+    disruptedPathogensAr: ['فطريات ذبول البقوليات', 'سلالات الذبول الفيرتيسيليومي بالباذنجانيات'],
     compatibleAfter: ['faba_bean', 'wheat', 'clover', 'potato', 'onion'],
     incompatibleAfter: ['maize', 'sorghum'],
     minimumBreakYears: 1,
+    scientificReferences: [
+      'FAO Irrigation & Drainage Paper No. 56 (Allen et al., 1998) — Maize ETc (600 mm)',
+      'MALR / ARC Egypt Maize Research Program Recommendations',
+    ],
     notes:
-      'Major summer grain and forage crop. Heavy feeder requiring 150-200 kg N/ha. Extremely responsive to residual nitrogen left by winter legumes (faba bean or chickpea).',
+      'Major summer grain and forage crop. Heavy feeder requiring 150-200 kg N/ha. Extremely responsive to residual nitrogen left by winter legumes (faba bean or chickpea). Sensitive to extreme heat (>35°C) during pollen shed and silking.',
     notesAr:
       'محصول الحبوب الصيفي الرئيسي والمغذي الأكبر للمواشي. مجهد للتربة ويستهلك 150-200 كغ N/هكتار. يستفيد بقوة استثنائية من النيتروجين المتبقي بعد الفول أو البقوليات الشتوية.',
   },
@@ -218,6 +245,7 @@ export const CROPS: CropInfo[] = [
     id: 'sorghum',
     name: 'Sorghum',
     arabicName: 'الذرة الرفيعة',
+    scientificName: 'Sorghum bicolor (L.) Moench',
     category: 'field_crop',
     family: 'Poaceae',
     familyAr: 'النجيلية (Poaceae)',
@@ -241,23 +269,28 @@ export const CROPS: CropInfo[] = [
     soilPreferences: ['clay', 'clay-loam', 'sandy-loam', 'drought/saline tolerant'],
     minPH: 5.5,
     maxPH: 8.5,
-    salinityToleranceDsM: 5.0,
+    salinityToleranceDsM: 6.8,
     pests: ['stem borer (Chilo partellus)', 'shoot fly'],
     diseases: ['grain mold', 'anthracnose', 'smut'],
-    disruptedPathogens: ['root-knot nematodes (Meloidogyne spp.)'],
-    disruptedPathogensAr: ['نيماتودا تعقد الجذور (Meloidogyne)'],
+    disruptedPathogens: ['Verticillium dahliae (solanaceous break)'],
+    disruptedPathogensAr: ['فطر الذبول الفيرتيسيليومي (فاصل غير باذنجاني)'],
     compatibleAfter: ['faba_bean', 'chickpea', 'wheat'],
     incompatibleAfter: ['sorghum', 'maize'],
     minimumBreakYears: 1,
+    scientificReferences: [
+      'FAO-56 Crop Evapotranspiration & Maas-Hoffman Salinity Threshold (ECe = 6.8 dS/m)',
+      'ICRISAT Sorghum Production & Drought Resilience Guidelines',
+    ],
     notes:
-      'C4 summer cereal with unmatched heat and water-deficit tolerance. Thrives where summer heat or restricted canal water limits maize.',
+      'C4 summer cereal with unmatched heat and water-deficit tolerance (380 mm ETc; ECe tolerance 6.8 dS/m). Note: As a Poaceae grass, Sorghum is a break from Solanaceae only, NOT a full break from cereal grasses.',
     notesAr:
-      'محصول صيفي رباعي الكربون (C4) خارق التحمل للإجهاد الحراري وشح المياه، وبديل ممتاز للذرة الشامية في فترات قيود الري أو بالمناطق الحارة.',
+      'محصول صيفي رباعي الكربون (C4) خارق التحمل للإجهاد الحراري وشح المياه والملوحة (6.8 ديسيسيمنز/م). ملاحظة: باعتباره من العائلة النجيلية، يمثل فاصلاً من الباذنجانيات فقط وليس فاصلاً كاملاً من الحشائش.',
   },
   {
     id: 'soybean',
     name: 'Soybean',
     arabicName: 'فول الصويا',
+    scientificName: 'Glycine max (L.) Merr.',
     category: 'field_crop',
     family: 'Fabaceae',
     familyAr: 'البقولية (Fabaceae)',
@@ -289,21 +322,26 @@ export const CROPS: CropInfo[] = [
     maxPH: 7.5,
     salinityToleranceDsM: 3.0,
     pests: ['soybean aphid', 'stink bugs', 'pod borer'],
-    diseases: ['frogeye leaf spot', 'root rot', 'rust'],
-    disruptedPathogens: ['corn rootworm', 'maize smut'],
-    disruptedPathogensAr: ['ديدان جذور الذرة', 'تفحم الذورة النجيلية'],
-    compatibleAfter: ['wheat', 'barley', 'potato'],
+    diseases: ['frogeye leaf spot', 'root rot', 'rust', 'charcoal rot (Macrophomina phaseolina)'],
+    disruptedPathogens: ['corn rootworm', 'maize smut', 'cereal take-all'],
+    disruptedPathogensAr: ['ديدان جذور الذرة', 'تفحم الذرة النجيلية', 'أعفان جذور القمح'],
+    compatibleAfter: ['wheat', 'barley', 'potato', 'onion'],
     incompatibleAfter: ['soybean', 'faba_bean'],
     minimumBreakYears: 2,
+    scientificReferences: [
+      'Peoples et al. (2009, Symbiosis 48:1–17) — Soybean shoot BNF & net soil N balance',
+      'FAO-56 Crop Water Requirements (Allen et al., 1998)',
+    ],
     notes:
-      'High-protein oilseed summer legume. Fixes 90-160 kg N/ha, but much is exported in seed harvest; net soil credit is 20-38 kg N/ha.',
+      'High-protein oilseed summer legume. Fixes 90-160 kg N/ha via Bradyrhizobium japonicum symbiosis, with net post-harvest soil residual credit of 20-38 kg N/ha.',
     notesAr:
-      'بقولية صيفية زيتية وبروتينية عالية القيمة. تثبت كميات وفيرة من النيتروجين لكن بذوره تمتص قسطاً كبيراً، تاركاً رصيداً صافياً 20-38 كغ N/هكتار للمحصول الشتوي التالي.',
+      'بقولية صيفية زيتية وبروتينية عالية القيمة. تثبت كميات وفيرة من النيتروجين (90-160 كغ N/هكتار) تاركة رصيداً صافياً 20-38 كغ N/هكتار للمحصول الشتوي التالي.',
   },
   {
     id: 'sunflower',
     name: 'Sunflower',
     arabicName: 'دوار الشمس',
+    scientificName: 'Helianthus annuus L.',
     category: 'field_crop',
     family: 'Asteraceae',
     familyAr: 'المركبة (Asteraceae)',
@@ -329,14 +367,18 @@ export const CROPS: CropInfo[] = [
     maxPH: 8.0,
     salinityToleranceDsM: 4.8,
     pests: ['sunflower moth', 'cutworms'],
-    diseases: ['Sclerotinia head rot', 'rust', 'Verticillium'],
+    diseases: ['Sclerotinia head rot', 'rust', 'Verticillium', 'charcoal rot (Macrophomina phaseolina)'],
     disruptedPathogens: ['cereal take-all', 'cereal cyst nematodes'],
     disruptedPathogensAr: ['فطريات عفن قواعد القمح', 'نيماتودا الحبوب النجيلية'],
-    compatibleAfter: ['wheat', 'barley', 'maize'],
-    incompatibleAfter: ['sunflower', 'potato'],
+    compatibleAfter: ['wheat', 'barley', 'maize', 'faba_bean'],
+    incompatibleAfter: ['sunflower', 'potato', 'soybean'],
     minimumBreakYears: 3,
+    scientificReferences: [
+      'FAO Irrigation & Drainage Paper No. 56 (Allen et al., 1998) — Sunflower ETc (450 mm) & root depth (1.5–2.0 m)',
+      'FAO GAEZ v4 Oilseed Suitability Parameters (ECe tolerance = 4.8 dS/m)',
+    ],
     notes:
-      'Subsoil nutrient and moisture scavenger with taproots reaching 2 meters. Breaks monoculture weed spectrums and cereal pathogen carryover.',
+      'Subsoil nutrient and moisture scavenger with taproots reaching 2 meters. Breaks monoculture grass weed spectrums and cereal pathogen carryover.',
     notesAr:
       'رائد استخلاص المياه والعناصر من باطن الأرض بجذور وتدية تصل لمترين. يكسر بنجاح بنك بذور الحشائش وأمراض الحبوب السطحية.',
   },
@@ -346,6 +388,7 @@ export const CROPS: CropInfo[] = [
     id: 'potato',
     name: 'Potato',
     arabicName: 'البطاطس',
+    scientificName: 'Solanum tuberosum L.',
     category: 'horticultural',
     family: 'Solanaceae',
     familyAr: 'الباذنجانية (Solanaceae)',
@@ -370,28 +413,33 @@ export const CROPS: CropInfo[] = [
     minPH: 5.0,
     maxPH: 6.8,
     salinityToleranceDsM: 1.7,
-    pests: ['potato tuber moth (Phthorimaea operculella)', 'aphids', 'Colorado potato beetle'],
+    pests: ['potato tuber moth (Phthorimaea operculella)', 'aphids', 'root-knot nematodes (Meloidogyne spp.)'],
     diseases: [
       'late blight (Phytophthora infestans)',
       'early blight (Alternaria solani)',
       'Verticillium wilt (Verticillium dahliae)',
       'black scurf (Rhizoctonia solani)',
-      'bacterial wilt (Ralstonia solanacearum)',
+      'common scab (Streptomyces scabies)',
     ],
     disruptedPathogens: ['cereal rusts', 'cereal take-all'],
     disruptedPathogensAr: ['أصداء الحبوب', 'أعفان قواعد القمح'],
     compatibleAfter: ['wheat', 'barley', 'maize', 'faba_bean'],
-    incompatibleAfter: ['potato', 'tomato', 'pepper', 'eggplant'],
+    incompatibleAfter: ['potato', 'tomato', 'pepper', 'eggplant', 'sunflower'],
     minimumBreakYears: 3,
+    scientificReferences: [
+      'FAO-56 Crop Evapotranspiration (Allen et al., 1998) — Potato ETc (550 mm) & Maas-Hoffman Salinity Threshold (ECe = 1.7 dS/m)',
+      'CIP (International Potato Center) Integrated Management of Soilborne Verticillium & Streptomyces scabies',
+    ],
     notes:
-      'High-margin cash vegetable. Sensitive to waterlogging, salinity (>1.7 dS/m), and high temperatures (>28°C during tuberization). Crucial rotational rule: requires at least 3 years between solanaceous crops to suppress soilborne Verticillium dahliae and Ralstonia bacterial wilt.',
+      'High-margin cash vegetable. Salt-sensitive (threshold ECe ~1.7 dS/m), sensitive to waterlogging and high temperatures (>28°C during tuberization). Requires at least 3 full non-host years (7 consecutive seasons) between solanaceous crops to suppress soilborne Verticillium dahliae.',
     notesAr:
-      'محصول خضر نقدي واستثماري عالي الربحية والتصدير. حساس جداً لملوحة المياه (>1.7 ديسيسيمنز) وتغدق التربة. قاعدة دورية ملزمة: يتطلب فاصلاً زمنياً لا يقل عن 3 سنوات قبل تكرار زراعته أو زراعة أي محصول باذنجاني (طماطم/فلفل) لتجنب توطن الذبول الوعائي (Verticillium) والعفن البني (Ralstonia).',
+      'محصول خضر نقدي واستثماري عالي الربحية والتصدير. حساس جداً لملوحة التربة (>1.7 ديسيسيمنز/م) وتغدق التربة. يتطلب فاصلاً زمنياً لا يقل عن 3 سنوات كاملة (7 مواسم غير عائلة) قبل تكرار زراعته لكبح الذبول الوعائي (Verticillium).',
   },
   {
     id: 'tomato',
     name: 'Tomato',
     arabicName: 'الطماطم',
+    scientificName: 'Solanum lycopersicum L.',
     category: 'horticultural',
     family: 'Solanaceae',
     familyAr: 'الباذنجانية (Solanaceae)',
@@ -416,13 +464,17 @@ export const CROPS: CropInfo[] = [
     minPH: 6.0,
     maxPH: 7.2,
     salinityToleranceDsM: 2.5,
-    pests: ['Tuta absoluta (tomato leafminer)', 'whitefly (Bemisia tabaci)', 'spider mites'],
+    pests: ['Tuta absoluta (tomato leafminer)', 'whitefly (Bemisia tabaci)', 'root-knot nematodes (Meloidogyne spp.)'],
     diseases: ['early blight', 'late blight', 'Fusarium wilt', 'TYLCV virus'],
     disruptedPathogens: ['cereal cyst nematode'],
     disruptedPathogensAr: ['نيماتودا حويصلات الحبوب'],
     compatibleAfter: ['wheat', 'maize', 'faba_bean', 'onion'],
     incompatibleAfter: ['tomato', 'potato', 'eggplant', 'pepper'],
     minimumBreakYears: 3,
+    scientificReferences: [
+      'FAO-56 Crop Evapotranspiration (Allen et al., 1998) — Tomato ETc (600 mm) & ECe = 2.5 dS/m',
+      'FAO Integrated Pest Management for Solanaceous Vegetables in Near East & North Africa',
+    ],
     notes:
       'Intensive horticultural vegetable requiring drip fertigation, pest scouting for Tuta absoluta, and a minimum 3-year solanaceous break.',
     notesAr:
@@ -432,6 +484,7 @@ export const CROPS: CropInfo[] = [
     id: 'onion',
     name: 'Onion',
     arabicName: 'البصل',
+    scientificName: 'Allium cepa L.',
     category: 'horticultural',
     family: 'Amaryllidaceae',
     familyAr: 'النرجسية / الثومية (Amaryllidaceae)',
@@ -455,23 +508,28 @@ export const CROPS: CropInfo[] = [
     soilPreferences: ['loam', 'sandy-loam', 'friable non-crusting'],
     minPH: 6.0,
     maxPH: 7.5,
-    salinityToleranceDsM: 1.8,
+    salinityToleranceDsM: 1.2,
     pests: ['onion thrips (Thrips tabaci)', 'onion maggot'],
     diseases: ['purple blotch (Alternaria porri)', 'downy mildew', 'white rot (Sclerotium cepivorum)'],
-    disruptedPathogens: ['Fusarium oxysporum in cereals', 'root-knot nematodes'],
-    disruptedPathogensAr: ['فطريات الفيوزاريوم بالحبوب', 'نيماتودا تعقد الجذور بالتربة بفعل الإفرازات الكبريتية'],
-    compatibleAfter: ['maize', 'wheat', 'faba_bean', 'potato'],
+    disruptedPathogens: ['Fusarium oxysporum in cereals', 'Meloidogyne spp. (poor host — limits multiplication)'],
+    disruptedPathogensAr: ['فطريات الفيوزاريوم بالحبوب', 'نيماتودا تعقد الجذور (عائل ضعيف يحد من تكاثر Meloidogyne)'],
+    compatibleAfter: ['maize', 'wheat', 'faba_bean', 'potato', 'sorghum'],
     incompatibleAfter: ['onion', 'garlic'],
     minimumBreakYears: 4,
+    scientificReferences: [
+      'FAO-56 Crop Evapotranspiration (Allen et al., 1998) — Onion ETc (450 mm) & Maas-Hoffman Salinity Threshold (ECe = 1.2 dS/m)',
+      'Bridge & Starr (2007) Plant Nematodes of Agricultural Importance — Allium host status for Meloidogyne spp.',
+    ],
     notes:
-      'High-export cash bulb crop. Releases sulfurous root exudates with biofumigation properties against soilborne fungi. Requires 4-year break between alliums to prevent white rot.',
+      'High-export cash bulb crop. Moderately salt-sensitive (threshold ECe ~1.2 dS/m). Acts as a poor host for Meloidogyne spp., limiting root-knot nematode multiplication (host-status effect). Requires a 4-year break between alliums to prevent white rot (Sclerotium cepivorum).',
     notesAr:
-      'محصول تصديري استثماري هام. يفرز مركبات كبريتية حيوية تطهر التربة من نيماتودا التعقد وأعفان الجذور، ولكن يحظر تكراره قبل 4 سنوات لمنع العفن الأبيض.',
+      'محصول تصديري استثماري هام. حساس للملوحة (عتبة 1.2 ديسيسيمنز/م). يعتبر عائلاً ضعيفاً لنيماتودا تعقد الجذور (Meloidogyne spp.) مما يحد من تكاثرها، ولكن يحظر تكراره قبل 4 سنوات لمنع العفن الأبيض.',
   },
   {
     id: 'garlic',
     name: 'Garlic',
     arabicName: 'الثوم',
+    scientificName: 'Allium sativum L.',
     category: 'horticultural',
     family: 'Amaryllidaceae',
     familyAr: 'النرجسية / الثومية (Amaryllidaceae)',
@@ -498,20 +556,25 @@ export const CROPS: CropInfo[] = [
     salinityToleranceDsM: 2.0,
     pests: ['thrips', 'stem and bulb nematode (Ditylenchus dipsaci)'],
     diseases: ['rust', 'white rot', 'penicillium decay'],
-    disruptedPathogens: ['soil fungal complexes', 'Rhizoctonia'],
-    disruptedPathogensAr: ['مجمعات فطريات التربة الضارة', 'ريزوكتونيا المحاصيل اللاحقة'],
+    disruptedPathogens: ['cereal root rots'],
+    disruptedPathogensAr: ['أعفان جذور الحبوب النجيلية'],
     compatibleAfter: ['maize', 'sorghum', 'wheat'],
     incompatibleAfter: ['garlic', 'onion'],
     minimumBreakYears: 4,
+    scientificReferences: [
+      'FAO-56 Crop Evapotranspiration (Allen et al., 1998)',
+      'ARC Egypt Horticultural Research Institute — Garlic Production Guide',
+    ],
     notes:
-      'Premium winter cash crop with potent natural biological soil-cleansing properties.',
+      'Premium winter cash bulb crop requiring well-drained friable loam/sandy-loam soils and a 4-year rotation interval away from other Allium crops.',
     notesAr:
-      'محصول شتوي ذو قيمة تجارية عالية، وتساعد إفرازات جذوره على إخماد ميكروبات وفطريات التربة الضارة.',
+      'محصول شتوي ذو قيمة تجارية عالية، يتطلب تربة طميية أو رملية طميية جيدة الصرف وفاصلاً زمنياً 4 سنوات عن محاصيل العائلة الثومية.',
   },
   {
     id: 'clover',
     name: 'Egyptian Clover (Berseem)',
     arabicName: 'البرسيم المسقاوي',
+    scientificName: 'Trifolium alexandrinum L.',
     category: 'field_crop',
     family: 'Fabaceae',
     familyAr: 'البقولية (Fabaceae)',
@@ -549,6 +612,10 @@ export const CROPS: CropInfo[] = [
     compatibleAfter: ['maize', 'sorghum', 'wheat'],
     incompatibleAfter: ['clover', 'alfalfa'],
     minimumBreakYears: 1,
+    scientificReferences: [
+      'FAO Grassland & Pasture Crops — Trifolium alexandrinum L. Monograph',
+      'Peoples et al. (2009) — Forage Legume Symbiotic Nitrogen Fixation',
+    ],
     notes:
       'The foundational soil-regenerating winter forage in Egypt. Multi-cut legume providing exceptional biological nitrogen (120-220 kg N/ha total fixed; 35-60 kg N/ha net residual credit) and dramatic soil structure improvement.',
     notesAr:
@@ -558,4 +625,18 @@ export const CROPS: CropInfo[] = [
 
 export function getCropById(id: string): CropInfo | undefined {
   return CROPS.find((c) => c.id === id);
+}
+
+export function findCropByName(name: string): CropInfo | undefined {
+  const q = name.trim().toLowerCase();
+  if (!q) return undefined;
+  return CROPS.find(
+    (c) =>
+      c.id.toLowerCase() === q ||
+      c.name.toLowerCase() === q ||
+      c.arabicName.toLowerCase() === q ||
+      c.scientificName.toLowerCase() === q ||
+      c.name.toLowerCase().includes(q) ||
+      c.arabicName.includes(q)
+  );
 }

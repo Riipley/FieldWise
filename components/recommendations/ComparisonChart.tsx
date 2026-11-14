@@ -221,7 +221,7 @@ export default function ComparisonChart({ strategies }: ComparisonChartProps) {
                   {isAr ? `قوي (${stratB.scores.pestDiversity}%) - فاصل عام كامل ثنائي الفلقة (الفول + دوار الشمس)` : `Strong (${stratB.scores.pestDiversity}%) - 1-year dicot break (Faba Bean + Sunflower)`}
                 </td>
                 <td className="py-3 px-4 bg-amber-50/30 text-amber-900 font-medium">
-                  {isAr ? `ممتاز (${stratC.scores.pestDiversity}%) - دورة رباعية بفاصل 3 سنوات للبطاطس + تطهير بالبصل` : `Superior (${stratC.scores.pestDiversity}%) - 4-year cycle (3-yr Solanaceae break + Onion biofumigation)`}
+                  {isAr ? `ممتاز (${stratC.scores.pestDiversity}%) - دورة رباعية بفاصل 3 سنوات للبطاطس + كبح النيماتودا بالبصل (عائل ضعيف)` : `Superior (${stratC.scores.pestDiversity}%) - 4-year cycle (3-yr Solanaceae break + Onion poor-host Meloidogyne suppression)`}
                 </td>
               </tr>
               <tr>

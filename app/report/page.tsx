@@ -12,7 +12,6 @@ import type { RecommendationResult } from '@/lib/types';
 import {
   loadFarmProfile,
   loadClimateData,
-  loadRecommendations,
   saveRecommendations,
 } from '@/lib/farm-store';
 import { generateRecommendations } from '@/lib/recommendation-engine';
@@ -26,19 +25,17 @@ export default function ReportPage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    let recs = loadRecommendations();
-    const currentVersion = 'FieldWise-Scientific-v2.3 (8-Dimension Corrected Weights & Water Rule)';
-    
-    // If no recs or older engine version, regenerate fresh
-    if (!recs || recs.engineVersion !== currentVersion || !recs.strategies?.[0]?.dimensionBreakdown) {
-      const farm = loadFarmProfile();
-      let climate = loadClimateData();
-      if (!climate) {
-        climate = getDemoClimateData(farm.lat, farm.lng);
-      }
-      recs = generateRecommendations(farm, climate);
-      saveRecommendations(recs);
+    const farm = loadFarmProfile();
+    let climate = loadClimateData();
+    if (
+      !climate ||
+      Math.abs(climate.location.lat - farm.lat) > 0.25 ||
+      Math.abs(climate.location.lng - farm.lng) > 0.25
+    ) {
+      climate = getDemoClimateData(farm.lat, farm.lng);
     }
+    const recs = generateRecommendations(farm, climate);
+    saveRecommendations(recs);
     setResult(recs);
   }, []);
 

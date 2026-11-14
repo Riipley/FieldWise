@@ -29,10 +29,32 @@ interface ReportViewProps {
 export default function ReportView({ result }: ReportViewProps) {
   const { t, isAr } = useLanguage();
   const {
+    farmProfile,
     climateData,
     strategies,
     disclaimer,
   } = result;
+
+  const isIsmailiaDefault =
+    Math.abs(farmProfile.lat - 30.8268) < 0.25 &&
+    Math.abs(farmProfile.lng - 32.3245) < 0.25;
+
+  const areaFeddans =
+    farmProfile.areaUnit === 'feddans'
+      ? farmProfile.area
+      : farmProfile.areaUnit === 'hectares'
+      ? Math.round((farmProfile.area / 0.42) * 10) / 10
+      : Math.round(((farmProfile.area * 0.404686) / 0.42) * 10) / 10;
+  const areaHa = (areaFeddans * 0.42).toFixed(2);
+  const areaM2 = Math.round(areaFeddans * 4200).toLocaleString('en-US');
+
+  const stratAMm = 1050;
+  const stratBMm = 940;
+  const stratAM3Feddan = Math.round(stratAMm * 4.2); // 4,410
+  const stratBM3Feddan = Math.round(stratBMm * 4.2); // 3,948
+  const stratAM3Parcel = Math.round(stratAM3Feddan * areaFeddans).toLocaleString('en-US');
+  const stratBM3Parcel = Math.round(stratBM3Feddan * areaFeddans).toLocaleString('en-US');
+  const savedM3Parcel = Math.round((stratAM3Feddan - stratBM3Feddan) * areaFeddans).toLocaleString('en-US');
 
   // Farmer-facing metrics per strategy (Item 3, 4, 8)
   const farmerMetrics: Record<
@@ -49,35 +71,35 @@ export default function ReportView({ result }: ReportViewProps) {
   > = {
     'strategy-a': {
       etMmYr: '1,050 mm/yr',
-      etM3ParcelYr: '≈ 22,050 m³/year (for 5-feddan parcel)',
+      etM3ParcelYr: `≈ ${stratAM3Parcel} m³/year (for ${areaFeddans}-feddan parcel)`,
       etM3FeddanYr: '≈ 4,410 m³/feddan/year',
       appliedWaterNote:
-        'Approx. applied water (Flood @ 50–60% efficiency + 15% leaching requirement): ≈ 42,200 – 50,700 m³/yr for 5 feddans (8,450 – 10,140 m³/feddan/yr).',
+        `Approx. applied water (Flood @ 50–60% efficiency + 15% leaching requirement): ≈ ${Math.round(8450 * areaFeddans).toLocaleString('en-US')} – ${Math.round(10140 * areaFeddans).toLocaleString('en-US')} m³/yr for ${areaFeddans} feddans (8,450 – 10,140 m³/feddan/yr).`,
       grossMarginEgp: '24,000 – 32,000 EGP/feddan/yr',
       yieldRanges:
         'Wheat: 16–20 ardeb/feddan (2.4–3.0 tonnes/feddan) | Maize: 22–26 ardeb/feddan (3.1–3.6 tonnes/feddan)',
     },
     'strategy-b': {
       etMmYr: '940 mm/yr (saves 110 mm/yr)',
-      etM3ParcelYr: '≈ 19,740 m³/year for 5-feddan parcel (saving ≈ 2,310 m³/yr vs. Option A)',
+      etM3ParcelYr: `≈ ${stratBM3Parcel} m³/year for ${areaFeddans}-feddan parcel (saving ≈ ${savedM3Parcel} m³/yr vs. Option A)`,
       etM3FeddanYr: '≈ 3,948 m³/feddan/year (saving ≈ 462 m³/feddan/yr)',
       appliedWaterNote:
-        'Approx. applied water (Flood @ 50–60% efficiency + 15% leaching requirement): ≈ 37,800 – 45,400 m³/yr for 5 feddans (7,560 – 9,080 m³/feddan/yr).',
+        `Approx. applied water (Flood @ 50–60% efficiency + 15% leaching requirement): ≈ ${Math.round(7560 * areaFeddans).toLocaleString('en-US')} – ${Math.round(9080 * areaFeddans).toLocaleString('en-US')} m³/yr for ${areaFeddans} feddans (7,560 – 9,080 m³/feddan/yr).`,
       grossMarginEgp: '38,000 – 48,000 EGP/feddan/yr',
       yieldRanges:
         'Wheat: 17–21 ardeb/feddan (2.55–3.15 t/feddan) | Maize: 24–28 ardeb/feddan (3.36–3.92 t/feddan) | Faba Bean: 8–11 ardeb/feddan (1.24–1.70 t/feddan) | Sunflower: 1.1–1.5 tonnes/feddan',
     },
     'strategy-c': {
       etMmYr: '940 mm/yr (saves 110 mm/yr)',
-      etM3ParcelYr: '≈ 19,740 m³/year for 5-feddan parcel (saving ≈ 2,310 m³/yr vs. Option A)',
+      etM3ParcelYr: `≈ ${stratBM3Parcel} m³/year for ${areaFeddans}-feddan parcel (saving ≈ ${savedM3Parcel} m³/yr vs. Option A)`,
       etM3FeddanYr: '≈ 3,948 m³/feddan/year (saving ≈ 462 m³/feddan/yr)',
       appliedWaterNote:
-        'Approx. applied water: Under flood (50–60% eff. + 15% LR) ≈ 37,800 – 45,400 m³/yr for 5 feddans; if converted to drip (85% eff. + 10% LR) ≈ 25,500 – 27,800 m³/yr for 5 feddans (5,100 – 5,560 m³/feddan/yr).',
+        `Approx. applied water: Under flood (50–60% eff. + 15% LR) ≈ ${Math.round(7560 * areaFeddans).toLocaleString('en-US')} – ${Math.round(9080 * areaFeddans).toLocaleString('en-US')} m³/yr for ${areaFeddans} feddans; if converted to drip (85% eff. + 10% LR) ≈ ${Math.round(5100 * areaFeddans).toLocaleString('en-US')} – ${Math.round(5560 * areaFeddans).toLocaleString('en-US')} m³/yr for ${areaFeddans} feddans (5,100 – 5,560 m³/feddan/yr).`,
       grossMarginEgp: '65,000 – 95,000 EGP/feddan/yr (annualized across 4-yr cycle)',
       yieldRanges:
         'Potato: 12–16 tonnes/feddan | Maize: 22–26 ardeb/feddan (3.1–3.6 t/feddan) | Faba Bean: 8–11 ardeb/feddan (1.24–1.70 t/feddan) | Sorghum: 18–22 ardeb/feddan (2.5–3.1 t/feddan) | Onion: 14–18 tonnes/feddan | Soybean: 1.2–1.6 tonnes/feddan',
       dripConversionNote:
-        'Requires conversion to drip irrigation — estimated conversion cost: 25,000–35,000 EGP/feddan (125,000–175,000 EGP for the 5-feddan parcel).',
+        `Requires conversion to drip irrigation — estimated conversion cost: 25,000–35,000 EGP/feddan (${Math.round(25000 * areaFeddans).toLocaleString('en-US')}–${Math.round(35000 * areaFeddans).toLocaleString('en-US')} EGP for the ${areaFeddans}-feddan parcel).`,
     },
   };
 
@@ -137,24 +159,24 @@ export default function ReportView({ result }: ReportViewProps) {
           <div className="grid grid-cols-2 gap-y-2.5 gap-x-4 text-xs">
             <div>
               <span className="text-stone-500 block">{t.farmNameLabel}:</span>
-              <strong className="text-stone-900">Ismailia Reclaimed Farm</strong>
+              <strong className="text-stone-900">{farmProfile.name || 'Ismailia Reclaimed Farm'}</strong>
             </div>
             <div>
               <span className="text-stone-500 block">{t.areaLabel}:</span>
               <strong className="text-stone-900 font-mono">
-                5 feddans (2.10 ha / 21,000 m²)
+                {areaFeddans} feddans ({areaHa} ha / {areaM2} m²)
               </strong>
             </div>
             <div>
               <span className="text-stone-500 block">{t.jurisdictionLabel}</span>
               <strong className="text-stone-900 block">
-                Ismailia Governorate / Suez Canal, Egypt
+                {farmProfile.region}, {farmProfile.country}
               </strong>
             </div>
             <div>
               <span className="text-stone-500 block">{t.geoCoordsTitle}:</span>
               <strong className="font-mono text-stone-900" dir="ltr">
-                30.8268°N, 32.3245°E
+                {Math.abs(farmProfile.lat).toFixed(4)}°{farmProfile.lat >= 0 ? 'N' : 'S'}, {Math.abs(farmProfile.lng).toFixed(4)}°{farmProfile.lng >= 0 ? 'E' : 'W'}
               </strong>
             </div>
           </div>
@@ -162,9 +184,13 @@ export default function ReportView({ result }: ReportViewProps) {
           <div className="text-[11px] text-stone-600 pt-2 border-t border-stone-200 space-y-1">
             <p>
               <strong>{isAr ? 'الموقع المرجعي:' : 'Resolved Sub-Region:'}</strong>{' '}
-              {isAr
-                ? 'تقع الإحداثيات بالقرب من القنطرة، شمال محافظة الإسماعيلية (ضمن خلية ناسا 0.5° × 0.5° ~50 كم).'
-                : 'Site resolves near El Qantara, northern Ismailia (within NASA POWER 0.5° × 0.5° ~50 km grid cell).'}
+              {isIsmailiaDefault
+                ? isAr
+                  ? 'تقع الإحداثيات بالقرب من القنطرة، شمال محافظة الإسماعيلية (ضمن خلية ناسا 0.5° × 0.5° ~50 كم).'
+                  : 'Site resolves near El Qantara, northern Ismailia (within NASA POWER 0.5° × 0.5° ~50 km grid cell).'
+                : isAr
+                ? `${farmProfile.region} (${farmProfile.country}) — ضمن خلية شبكة وكالة ناسا 0.5° × 0.5° (~50 كم).`
+                : `${farmProfile.region} (${farmProfile.country}) — resolved within NASA POWER 0.5° × 0.5° (~50 km) agroclimatology grid cell.`}
             </p>
           </div>
         </div>
@@ -178,32 +204,46 @@ export default function ReportView({ result }: ReportViewProps) {
             <div>
               <span className="text-stone-500 block">{isAr ? 'الدورة الحالية:' : 'Current Rotation:'}</span>
               <strong className="text-stone-900">
-                Maize ← Wheat (2-year cereal cycle)
+                {farmProfile.currentCrops.includes('Maize') && farmProfile.currentCrops.includes('Wheat') && farmProfile.currentCrops.length === 2
+                  ? 'Maize ← Wheat (2-year cereal cycle)'
+                  : farmProfile.currentCrops.join(' ← ')}
               </strong>
             </div>
             <div>
               <span className="text-stone-500 block">{isAr ? 'نظام الري:' : 'Irrigation System:'}</span>
               <strong className="text-stone-900">
-                Flood (canal supply, scarce)
+                {farmProfile.irrigationMethod === 'flood' && farmProfile.waterAvailability === 'scarce'
+                  ? 'Flood (canal supply, scarce)'
+                  : `${farmProfile.irrigationMethod.toUpperCase()} (${farmProfile.waterAvailability} water)`}
               </strong>
             </div>
             <div>
               <span className="text-stone-500 block">{isAr ? 'قوام التربة / المادة العضوية:' : 'Soil Texture / SOM:'}</span>
               <strong className="text-stone-900">
-                Loam / Medium (SOM ~1.5–2%)
+                {farmProfile.soilType === 'loam' && farmProfile.organicMatter === 'medium'
+                  ? 'Loam / Medium (SOM ~1.5–2%)'
+                  : `${farmProfile.soilType.toUpperCase()} / SOM: ${farmProfile.organicMatter}`}
               </strong>
             </div>
             <div>
               <span className="text-stone-500 block">{isAr ? 'درجة الحموضة (pH):' : 'Soil pH Range:'}</span>
               <strong className="text-stone-900">
-                6.0–7.5 (neutral to slightly alkaline)
+                {farmProfile.soilPH === 'neutral'
+                  ? '6.0–7.5 (neutral to slightly alkaline)'
+                  : farmProfile.soilPH === 'alkaline'
+                  ? '>7.5 (alkaline / calcareous)'
+                  : farmProfile.soilPH === 'acidic'
+                  ? '<6.0 (acidic)'
+                  : 'Unknown (untested)'}
               </strong>
             </div>
           </div>
           <div className="pt-2 border-t border-stone-200 text-[11px] text-stone-600 space-y-1">
             <p>
               <strong>{isAr ? 'أولويات المزارع:' : 'Stated Priorities:'}</strong>{' '}
-              Disease resistance, water conservation, soil health, climate resilience, yield stability, low input costs
+              {farmProfile.priorities.length > 0
+                ? farmProfile.priorities.join(', ')
+                : 'Disease resistance, water conservation, soil health, climate resilience, yield stability, low input costs'}
             </p>
             <p className="text-[10px] text-stone-500 italic">
               <strong>Assumption:</strong> Current rotation unified to &ldquo;Maize ← Wheat (2-year cereal cycle)&rdquo; (first option selected) to eliminate contradiction with Option A&apos;s 4-season Wheat–Maize baseline.
@@ -220,7 +260,7 @@ export default function ReportView({ result }: ReportViewProps) {
             {t.nasaReportSectionTitle}
           </h2>
           <span className="text-[11px] font-mono text-stone-500">
-            NASA POWER Climatology (2001–2020) • 0.5° Grid
+            NASA POWER Climatology (2001–2020) • 0.5° Grid ({climateData.source === 'nasa_power' ? 'Live API' : 'Calibrated Fallback'})
           </span>
         </div>
 
@@ -228,30 +268,30 @@ export default function ReportView({ result }: ReportViewProps) {
           <div className="p-3.5 rounded-xl border border-stone-200 bg-white">
             <span className="text-[10px] font-mono font-bold text-stone-500 block">T2M ANNUAL MEAN</span>
             <div className="text-xl font-black text-stone-900 mt-1" dir="ltr">
-              {climateData.annual.meanTemp || 21.8}°C
+              {climateData.annual.meanTemp || 21.5}°C
             </div>
             <span className="text-[11px] text-stone-600">
-              Min: 3.3°C (Jan–Feb) | Max: 42.8°C (Jul–Aug)
+              Min: {climateData.annual.minTemp ?? 3.3}°C | Max: {climateData.annual.maxTemp ?? 42.8}°C
             </span>
           </div>
 
           <div className="p-3.5 rounded-xl border border-stone-200 bg-white">
             <span className="text-[10px] font-mono font-bold text-stone-500 block">PRECTOTCORR (GRID CELL)</span>
             <div className="text-xl font-black text-stone-900 mt-1" dir="ltr">
-              89 mm/yr
+              {Math.round(climateData.annual.totalPrecip || 89)} mm/yr
             </div>
             <span className="text-[11px] text-stone-600">
-              Ground stations: 25–40 mm/yr
+              {isIsmailiaDefault ? 'Ground stations: 25–40 mm/yr' : `Humidity: ${climateData.annual.meanHumidity}%`}
             </span>
           </div>
 
           <div className="p-3.5 rounded-xl border border-stone-200 bg-white">
             <span className="text-[10px] font-mono font-bold text-stone-500 block">CLIMATIC WATER DEFICIT</span>
             <div className="text-xl font-black text-amber-700 mt-1" dir="ltr">
-              -1,561 mm/yr
+              {climateData.annual.annualDeficitMm?.toLocaleString('en-US') || '-1,561'} mm/yr
             </div>
             <span className="text-[11px] text-stone-600">
-              Supplied by canal flood irrigation (scarce)
+              Supplied by {farmProfile.irrigationMethod} irrigation ({farmProfile.waterAvailability})
             </span>
           </div>
 

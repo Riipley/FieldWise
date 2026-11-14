@@ -92,6 +92,8 @@ export function saveFarmProfile(farm: FarmProfile): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(FARM_PROFILE_KEY, JSON.stringify(farm));
+    // Invalidate cached recommendations so /recommendations and /report always recompute with latest farm settings
+    localStorage.removeItem(RECOMMENDATIONS_KEY);
   } catch (e) {
     console.error('Failed to save farm profile to localStorage', e);
   }

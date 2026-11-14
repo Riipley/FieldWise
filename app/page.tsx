@@ -297,13 +297,13 @@ export default function LandingPage() {
             <div className="lg:col-span-6 bg-stone-800/50 p-6 rounded-2xl border border-stone-700/80">
               <h3 className="text-sm font-semibold text-stone-300 uppercase tracking-wider mb-4 flex items-center justify-between">
                 <span>{isAr ? 'قاعدة بيانات المحاصيل المعتمدة' : 'Crop Knowledge Base'}</span>
-                <span className="text-emerald-400 text-xs">{isAr ? '7 محاصيل قياسية' : '7 Standard Benchmark Crops'}</span>
+                <span className="text-emerald-400 text-xs">{isAr ? '13 محصولاً معايراً علمياً' : '13 Calibrated Benchmark Crops'}</span>
               </h3>
               <div className="space-y-2.5">
                 {[
                   { name: isAr ? 'القمح (Wheat)' : 'Wheat (Triticum aestivum)', family: 'Poaceae', role: isAr ? 'محصول حبوب شتوي أساسي' : 'Cool-season staple cereal' },
                   { name: isAr ? 'الذرة الصفراء (Maize)' : 'Maize (Zea mays)', family: 'Poaceae', role: isAr ? 'حبوب صيفية عالية الطاقة' : 'High-energy summer grain' },
-                  { name: isAr ? 'الفول البلدي (Faba Bean)' : 'Faba Bean (Vicia faba)', family: 'Fabaceae', role: isAr ? 'تثبيت حيوي للنيتروجين (30-50 كغ/هكتار)' : 'Biological nitrogen fixer (30-50 kg N/ha)' },
+                  { name: isAr ? 'الفول البلدي (Faba Bean)' : 'Faba Bean (Vicia faba)', family: 'Fabaceae', role: isAr ? 'تثبيت حيوي للنيتروجين (25-45 كغ N/هكتار متبقي صافي)' : 'Biological nitrogen fixer (25-45 kg N/ha net residual)' },
                   { name: isAr ? 'فول الصويا (Soybean)' : 'Soybean (Glycine max)', family: 'Fabaceae', role: isAr ? 'بقوليات بروتينية صيفية' : 'Warm-season protein pulse' },
                   { name: isAr ? 'عباد الشمس (Sunflower)' : 'Sunflower (Helianthus annuus)', family: 'Asteraceae', role: isAr ? 'جذور وتدية عميقة متحملة للجفاف' : 'Deep-rooted drought scavenger' },
                   { name: isAr ? 'الشعير (Barley)' : 'Barley (Hordeum vulgare)', family: 'Poaceae', role: isAr ? 'متحمل للجفاف والملوحة' : 'Salinity & drought resilient cereal' },

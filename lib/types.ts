@@ -52,6 +52,7 @@ export interface CropInfo {
   id: string;
   name: string;
   arabicName: string;
+  scientificName: string;
   category: 'field_crop' | 'horticultural';
   family: string;
   familyAr: string;
@@ -89,6 +90,7 @@ export interface CropInfo {
   compatibleAfter: string[];
   incompatibleAfter: string[];
   minimumBreakYears: number; // e.g. Solanaceae 3-4 years
+  scientificReferences: string[];
   notes: string;
   notesAr: string;
 }
