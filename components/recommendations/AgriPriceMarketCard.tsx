@@ -23,7 +23,6 @@ interface AgriPriceMarketCardProps {
 
 export default function AgriPriceMarketCard({ farmProfile }: AgriPriceMarketCardProps) {
   const { isAr } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'rotation_crops' | 'market_benchmarks'>('rotation_crops');
 
   const areaFeddans =
     farmProfile.areaUnit === 'feddans'
@@ -56,30 +55,6 @@ export default function AgriPriceMarketCard({ farmProfile }: AgriPriceMarketCard
         </div>
 
         <div className="flex flex-wrap items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={() => setActiveTab('rotation_crops')}
-            className={`text-xs font-bold px-3.5 py-2 rounded-xl border transition flex items-center gap-1.5 ${
-              activeTab === 'rotation_crops'
-                ? 'bg-emerald-700 text-white border-emerald-700 shadow-2xs'
-                : 'bg-stone-50 text-stone-700 border-stone-300 hover:bg-stone-100'
-            }`}
-          >
-            <Calculator className="w-3.5 h-3.5" />
-            {isAr ? 'محاصيل الدورة وحاسبة الفدان (10)' : 'Rotation Crops & Feddan Calculator (10)'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('market_benchmarks')}
-            className={`text-xs font-bold px-3.5 py-2 rounded-xl border transition flex items-center gap-1.5 ${
-              activeTab === 'market_benchmarks'
-                ? 'bg-emerald-700 text-white border-emerald-700 shadow-2xs'
-                : 'bg-stone-50 text-stone-700 border-stone-300 hover:bg-stone-100'
-            }`}
-          >
-            <Building2 className="w-3.5 h-3.5" />
-            {isAr ? 'مؤشرات محاصيل إضافية (أرز / سمسم / قطن)' : 'National Crop Benchmarks (Rice / Sesame / Cotton)'}
-          </button>
           <a
             href={AGRIPRICE_SOURCE_METADATA.url}
             target="_blank"
@@ -92,109 +67,116 @@ export default function AgriPriceMarketCard({ farmProfile }: AgriPriceMarketCard
         </div>
       </div>
 
-      {activeTab === 'rotation_crops' ? (
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs text-start border-collapse">
-            <thead>
-              <tr className="bg-stone-100 text-stone-700 border-y border-stone-200">
-                <th className="py-3 px-3.5 text-start font-bold">
-                  {isAr ? 'المحصول' : 'Crop'}
-                </th>
-                <th className="py-3 px-3.5 text-start font-bold">
-                  {isAr ? 'سعر الحقل للطن (EGP)' : 'Farmgate Price / Ton (EGP)'}
-                </th>
-                <th className="py-3 px-3.5 text-start font-bold">
-                  {isAr ? 'سعر الجملة / التجزئة' : 'Wholesale / Retail'}
-                </th>
-                <th className="py-3 px-3.5 text-start font-bold">
-                  {isAr ? 'متوسط إنتاج الفدان' : 'Avg Yield / Feddan'}
-                </th>
-                <th className="py-3 px-3.5 text-start font-bold bg-emerald-50/60 text-emerald-950">
-                  {isAr ? 'إيراد الفدان وصافي الربح التقديري' : 'Gross Revenue & Net Margin / Feddan'}
-                </th>
-                <th className="py-3 px-3.5 text-start font-bold bg-amber-50/60 text-amber-950">
-                  {isAr
-                    ? `صافي ربح المزرعة (${areaFeddans} فدان)`
-                    : `Total Parcel Net Margin (${areaFeddans} feddans)`}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-200">
-              {AGRIPRICE_CROPS.map((item) => {
-                const farmgateAvg = item.farmgateTonEgp?.avg || 15000;
-                const grossRevPerFeddan = Math.round(farmgateAvg * item.avgYieldTonPerFeddan.typical);
-                const netMarginPerFeddan = Math.round(grossRevPerFeddan - item.estimatedCostPerFeddanEgp);
-                const totalParcelNet = Math.round(netMarginPerFeddan * areaFeddans);
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs text-start border-collapse">
+          <thead>
+            <tr className="bg-stone-100 text-stone-700 border-y border-stone-200">
+              <th className="py-3 px-3.5 text-start font-bold">
+                {isAr ? 'المحصول' : 'Crop'}
+              </th>
+              <th className="py-3 px-3.5 text-start font-bold">
+                {isAr ? 'سعر الحقل للطن (EGP)' : 'Farmgate Price / Ton (EGP)'}
+              </th>
+              <th className="py-3 px-3.5 text-start font-bold">
+                {isAr ? 'سعر الجملة / التجزئة' : 'Wholesale / Retail'}
+              </th>
+              <th className="py-3 px-3.5 text-start font-bold">
+                {isAr ? 'متوسط إنتاج الفدان' : 'Avg Yield / Feddan'}
+              </th>
+              <th className="py-3 px-3.5 text-start font-bold bg-emerald-50/60 text-emerald-950">
+                {isAr ? 'إيراد الفدان وصافي الربح التقديري' : 'Gross Revenue & Net Margin / Feddan'}
+              </th>
+              <th className="py-3 px-3.5 text-start font-bold bg-amber-50/60 text-amber-950">
+                {isAr
+                  ? `صافي ربح المزرعة (${areaFeddans} فدان)`
+                  : `Total Parcel Net Margin (${areaFeddans} feddans)`}
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-stone-200">
+            {AGRIPRICE_CROPS.map((item) => {
+              const farmgateAvg = item.farmgateTonEgp?.avg || 15000;
+              const grossRevPerFeddan = Math.round(farmgateAvg * item.avgYieldTonPerFeddan.typical);
+              const netMarginPerFeddan = Math.round(grossRevPerFeddan - item.estimatedCostPerFeddanEgp);
+              const totalParcelNet = Math.round(netMarginPerFeddan * areaFeddans);
 
-                return (
-                  <tr key={item.cropId} className="hover:bg-stone-50/80 transition">
-                    <td className="py-3 px-3.5 font-bold text-stone-900">
-                      <div>{isAr ? item.nameAr : item.nameEn}</div>
-                      <span className="text-[10px] font-normal text-stone-500">
-                        {item.category === 'vegetables'
-                          ? isAr
-                            ? 'محصول خضر بستاني نقدي'
-                            : 'Horticultural Cash Crop'
-                          : isAr
-                          ? 'محصول حقلي (حبوب / بقوليات / زيوت)'
-                          : 'Field Crop (Grain / Pulse / Oilseed)'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3.5 font-mono">
-                      <div className="font-bold text-stone-900">
-                        {farmgateAvg.toLocaleString('en-US')} EGP/t
-                      </div>
-                      {item.farmgateTonEgp && (
-                        <span className="text-[10px] text-stone-500">
-                          {isAr ? 'المدى:' : 'Range:'} {item.farmgateTonEgp.min.toLocaleString('en-US')} –{' '}
-                          {item.farmgateTonEgp.max.toLocaleString('en-US')}
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3 px-3.5 font-mono text-stone-700">
-                      {item.wholesaleEgp && (
-                        <div>
-                          <span className="text-stone-500">{isAr ? 'جملة:' : 'Wholesale:'}</span>{' '}
-                          <strong>{item.wholesaleEgp.avg.toLocaleString('en-US')}</strong> EGP/
-                          {isAr ? item.wholesaleEgp.unitAr : item.wholesaleEgp.unitEn}
-                        </div>
-                      )}
-                      {item.retailEgp && (
-                        <div className="text-[10px] text-stone-500">
-                          {isAr ? 'تجزئة:' : 'Retail:'} {item.retailEgp.avg.toLocaleString('en-US')} EGP/
-                          {isAr ? item.retailEgp.unitAr : item.retailEgp.unitEn}
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-3 px-3.5">
-                      <div className="font-semibold text-stone-900 font-mono">
-                        {item.avgYieldTonPerFeddan.typical} {isAr ? 'طن/فدان' : 't/feddan'}
-                      </div>
+              return (
+                <tr key={item.cropId} className="hover:bg-stone-50/80 transition">
+                  <td className="py-3 px-3.5 font-bold text-stone-900">
+                    <div>{isAr ? item.nameAr : item.nameEn}</div>
+                    <span className="text-[10px] font-normal text-stone-500">
+                      {item.category === 'vegetables'
+                        ? isAr
+                          ? 'محصول خضر بستاني نقدي'
+                          : 'Horticultural Cash Crop'
+                        : isAr
+                        ? 'محصول حقلي (حبوب / بقوليات / زيوت)'
+                        : 'Field Crop (Grain / Pulse / Oilseed)'}
+                    </span>
+                  </td>
+                  <td className="py-3 px-3.5 font-mono">
+                    <div className="font-bold text-stone-900">
+                      {farmgateAvg.toLocaleString('en-US')} EGP/t
+                    </div>
+                    {item.farmgateTonEgp && (
                       <span className="text-[10px] text-stone-500">
-                        {isAr
-                          ? item.avgYieldTonPerFeddan.localUnitNoteAr
-                          : item.avgYieldTonPerFeddan.localUnitNoteEn}
+                        {isAr ? 'المدى:' : 'Range:'} {item.farmgateTonEgp.min.toLocaleString('en-US')} –{' '}
+                        {item.farmgateTonEgp.max.toLocaleString('en-US')}
                       </span>
-                    </td>
-                    <td className="py-3 px-3.5 bg-emerald-50/40 font-mono">
-                      <div className="font-bold text-emerald-800">
-                        +{netMarginPerFeddan.toLocaleString('en-US')} EGP/{isAr ? 'فدان' : 'fed'}
+                    )}
+                  </td>
+                  <td className="py-3 px-3.5 font-mono text-stone-700">
+                    {item.wholesaleEgp && (
+                      <div>
+                        <span className="text-stone-500">{isAr ? 'جملة:' : 'Wholesale:'}</span>{' '}
+                        <strong>{item.wholesaleEgp.avg.toLocaleString('en-US')}</strong> EGP/
+                        {isAr ? item.wholesaleEgp.unitAr : item.wholesaleEgp.unitEn}
                       </div>
-                      <span className="text-[10px] text-stone-600">
-                        {isAr ? 'الإيراد:' : 'Gross:'} {grossRevPerFeddan.toLocaleString('en-US')} |{' '}
-                        {isAr ? 'التكلفة:' : 'Cost:'} {item.estimatedCostPerFeddanEgp.toLocaleString('en-US')}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3.5 bg-amber-50/40 font-mono font-extrabold text-amber-900">
-                      {totalParcelNet.toLocaleString('en-US')} EGP
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      ) : (
+                    )}
+                    {item.retailEgp && (
+                      <div className="text-[10px] text-stone-500">
+                        {isAr ? 'تجزئة:' : 'Retail:'} {item.retailEgp.avg.toLocaleString('en-US')} EGP/
+                        {isAr ? item.retailEgp.unitAr : item.retailEgp.unitEn}
+                      </div>
+                    )}
+                  </td>
+                  <td className="py-3 px-3.5">
+                    <div className="font-semibold text-stone-900 font-mono">
+                      {item.avgYieldTonPerFeddan.typical} {isAr ? 'طن/فدان' : 't/feddan'}
+                    </div>
+                    <span className="text-[10px] text-stone-500">
+                      {isAr
+                        ? item.avgYieldTonPerFeddan.localUnitNoteAr
+                        : item.avgYieldTonPerFeddan.localUnitNoteEn}
+                    </span>
+                  </td>
+                  <td className="py-3 px-3.5 bg-emerald-50/40 font-mono">
+                    <div className="font-bold text-emerald-800">
+                      +{netMarginPerFeddan.toLocaleString('en-US')} EGP/{isAr ? 'فدان' : 'fed'}
+                    </div>
+                    <span className="text-[10px] text-stone-600">
+                      {isAr ? 'الإيراد:' : 'Gross:'} {grossRevPerFeddan.toLocaleString('en-US')} |{' '}
+                      {isAr ? 'التكلفة:' : 'Cost:'} {item.estimatedCostPerFeddanEgp.toLocaleString('en-US')}
+                    </span>
+                  </td>
+                  <td className="py-3 px-3.5 bg-amber-50/40 font-mono font-extrabold text-amber-900">
+                    {totalParcelNet.toLocaleString('en-US')} EGP
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* National Crop Benchmarks (Always Visible) */}
+      <div className="space-y-3 pt-2">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 flex items-center gap-1.5">
+          <Building2 className="w-4 h-4 text-emerald-700" />
+          {isAr
+            ? 'مؤشرات أسعار محاصيل مصرية استراتيجية إضافية (أرز / سمسم / فاصوليا / قطن)'
+            : 'Additional National Egyptian Crop Benchmarks (Rice / Sesame / Dry Beans / Cotton)'}
+        </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {AGRIPRICE_BENCHMARK_EXTRAS.map((extra, idx) => (
             <div
@@ -217,7 +199,7 @@ export default function AgriPriceMarketCard({ farmProfile }: AgriPriceMarketCard
             </div>
           ))}
         </div>
-      )}
+      </div>
 
       {/* Strategy Annualized Comparison Summary Footer */}
       <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-stone-700">

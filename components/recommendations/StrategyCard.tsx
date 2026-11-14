@@ -25,8 +25,6 @@ interface StrategyCardProps {
 }
 
 export default function StrategyCard({ strategy, isBaseline }: StrategyCardProps) {
-  const [expanded, setExpanded] = useState(false);
-  const [showDimensions, setShowDimensions] = useState(false);
   const { t, isAr } = useLanguage();
 
   const getScoreColor = (score: number) => {
@@ -179,20 +177,13 @@ export default function StrategyCard({ strategy, isBaseline }: StrategyCardProps
           </div>
         </div>
 
-        {/* 8-Dimension Scores Summary with Toggle */}
+        {/* 8-Dimension Scores Summary (Always Visible) */}
         <div className="mb-6 space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-stone-800 mb-2">
             <span>{isAr ? 'التقييم عبر 8 أبعاد علمية معتمدة' : '8-Dimension Agronomic Breakdown'}</span>
-            <button
-              type="button"
-              onClick={() => setShowDimensions(!showDimensions)}
-              className="text-[11px] text-emerald-700 hover:text-emerald-800 underline font-semibold"
-            >
-              {showDimensions ? (isAr ? 'إخفاء جدول الأوزان' : 'Hide Weights') : (isAr ? 'عرض جدول الأوزان والمساهمات' : 'View Weights & Contributions')}
-            </button>
           </div>
 
-          {showDimensions && strategy.dimensionBreakdown && (
+          {strategy.dimensionBreakdown && (
             <div className="overflow-x-auto rounded-xl border border-stone-200 bg-stone-50 p-3 mb-4 text-[11px]">
               <table className="w-full text-start">
                 <thead>
@@ -308,104 +299,86 @@ export default function StrategyCard({ strategy, isBaseline }: StrategyCardProps
           </ul>
         </div>
 
-        {/* Expandable Deep Dive */}
-        {expanded && (
-          <div className="mt-4 pt-4 border-t border-stone-200 space-y-4 text-xs">
-            {/* Disadvantages / Constraints */}
-            <div>
-              <span className="font-bold text-stone-800 flex items-center gap-1.5 mb-1.5">
-                <AlertTriangle className="w-4 h-4 text-amber-600" />
-                {t.considerationsLabel}
-              </span>
-              <ul className="text-stone-600 space-y-1">
-                {disadvantages.map((dis, idx) => (
-                  <li key={idx} className="flex items-start gap-1.5">
-                    <span className="text-amber-500 font-bold mt-0.5">&bull;</span>
-                    <span>{dis}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Pathogen Cycle Disruption Details */}
-            {strategy.pestAnalysis && (
-              <div className="p-3 rounded-xl bg-stone-50 border border-stone-200 space-y-1.5">
-                <div className="font-bold text-stone-800 flex items-center gap-1.5 text-xs">
-                  <Bug className="w-4 h-4 text-stone-600" />
-                  <span>{t.pestDisruptionTitle}</span>
-                </div>
-                <div className="text-[11px] text-stone-600 space-y-1">
-                  <p>
-                    <strong className="text-emerald-800">{isAr ? 'الآفات المكبوحة بدورة التعاقب:' : 'Disrupted Pathogens:'}</strong>{' '}
-                    {isAr
-                      ? strategy.pestAnalysis.disruptedPathogensAr.join('، ')
-                      : strategy.pestAnalysis.disruptedPathogens.join(', ')}
-                  </p>
-                  <p>
-                    <strong className="text-amber-800">{isAr ? 'ملاحظة الفاصل الزمني:' : 'Rotation Interval Rule:'}</strong>{' '}
-                    {isAr
-                      ? strategy.pestAnalysis.rotationIntervalNoteAr
-                      : strategy.pestAnalysis.rotationIntervalNote}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Management Risks */}
-            <div>
-              <span className="font-bold text-stone-800 flex items-center gap-1.5 mb-1.5">
-                <ShieldAlert className="w-4 h-4 text-rose-600" />
-                {t.risksLabel}
-              </span>
-              <ul className="text-stone-600 space-y-1">
-                {risks.map((risk, idx) => (
-                  <li key={idx} className="flex items-start gap-1.5">
-                    <span className="text-rose-500 font-bold mt-0.5">&bull;</span>
-                    <span>{risk}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Detailed Scientific Explanation */}
-            <div className="p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-200/60 space-y-1">
-              <span className="font-bold text-emerald-950 block">
-                {t.whyRecommendedTitle}
-              </span>
-              <p className="text-stone-700 leading-relaxed text-[11px]">
-                {explanation}
-              </p>
-            </div>
-
-            {/* Data Limitations */}
-            <div className="text-[11px] text-stone-500 space-y-1 pt-1">
-              <span className="font-bold text-stone-700 block">
-                {isAr ? 'شفافية البيانات ومحدودية النماذج:' : 'Scientific Data Transparency & Uncertainty:'}
-              </span>
-              <ul className="list-disc list-inside space-y-0.5">
-                {dataLimitations.map((lim, idx) => (
-                  <li key={idx}>{lim}</li>
-                ))}
-              </ul>
-            </div>
+        {/* Deep Dive Details (Always Visible) */}
+        <div className="mt-4 pt-4 border-t border-stone-200 space-y-4 text-xs">
+          {/* Disadvantages / Constraints */}
+          <div>
+            <span className="font-bold text-stone-800 flex items-center gap-1.5 mb-1.5">
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
+              {t.considerationsLabel}
+            </span>
+            <ul className="text-stone-600 space-y-1">
+              {disadvantages.map((dis, idx) => (
+                <li key={idx} className="flex items-start gap-1.5">
+                  <span className="text-amber-500 font-bold mt-0.5">&bull;</span>
+                  <span>{dis}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-        )}
-      </div>
 
-      {/* Expand/Collapse Button */}
-      <div className="p-4 bg-stone-50/80 border-t border-stone-200/80 rounded-b-2xl">
-        <button
-          type="button"
-          onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-stone-700 hover:text-stone-900 transition"
-        >
-          <span>{expanded ? t.hideDetailsBtn : t.viewDetailsBtn}</span>
-          {expanded ? (
-            <ChevronUp className="w-4 h-4" />
-          ) : (
-            <ChevronDown className="w-4 h-4" />
+          {/* Pathogen Cycle Disruption Details */}
+          {strategy.pestAnalysis && (
+            <div className="p-3 rounded-xl bg-stone-50 border border-stone-200 space-y-1.5">
+              <div className="font-bold text-stone-800 flex items-center gap-1.5 text-xs">
+                <Bug className="w-4 h-4 text-stone-600" />
+                <span>{t.pestDisruptionTitle}</span>
+              </div>
+              <div className="text-[11px] text-stone-600 space-y-1">
+                <p>
+                  <strong className="text-emerald-800">{isAr ? 'الآفات المكبوحة بدورة التعاقب:' : 'Disrupted Pathogens:'}</strong>{' '}
+                  {isAr
+                    ? strategy.pestAnalysis.disruptedPathogensAr.join('، ')
+                    : strategy.pestAnalysis.disruptedPathogens.join(', ')}
+                </p>
+                <p>
+                  <strong className="text-amber-800">{isAr ? 'ملاحظة الفاصل الزمني:' : 'Rotation Interval Rule:'}</strong>{' '}
+                  {isAr
+                    ? strategy.pestAnalysis.rotationIntervalNoteAr
+                    : strategy.pestAnalysis.rotationIntervalNote}
+                </p>
+              </div>
+            </div>
           )}
-        </button>
+
+          {/* Management Risks */}
+          <div>
+            <span className="font-bold text-stone-800 flex items-center gap-1.5 mb-1.5">
+              <ShieldAlert className="w-4 h-4 text-rose-600" />
+              {t.risksLabel}
+            </span>
+            <ul className="text-stone-600 space-y-1">
+              {risks.map((risk, idx) => (
+                <li key={idx} className="flex items-start gap-1.5">
+                  <span className="text-rose-500 font-bold mt-0.5">&bull;</span>
+                  <span>{risk}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Detailed Scientific Explanation */}
+          <div className="p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-200/60 space-y-1">
+            <span className="font-bold text-emerald-950 block">
+              {t.whyRecommendedTitle}
+            </span>
+            <p className="text-stone-700 leading-relaxed text-[11px]">
+              {explanation}
+            </p>
+          </div>
+
+          {/* Data Limitations */}
+          <div className="text-[11px] text-stone-500 space-y-1 pt-1">
+            <span className="font-bold text-stone-700 block">
+              {isAr ? 'شفافية البيانات ومحدودية النماذج:' : 'Scientific Data Transparency & Uncertainty:'}
+            </span>
+            <ul className="list-disc list-inside space-y-0.5">
+              {dataLimitations.map((lim, idx) => (
+                <li key={idx}>{lim}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   );
