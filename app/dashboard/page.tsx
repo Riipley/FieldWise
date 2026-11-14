@@ -239,11 +239,8 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Complete NASA & Space Agency Partner Data Ecosystem */}
-          <NasaResourcesHub compact />
-
           {/* Action Row */}
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-end pt-2 pb-2">
             <Link
               href="/recommendations"
               className="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-7 py-3.5 rounded-xl shadow-md transition hover:shadow-lg"
@@ -252,6 +249,9 @@ export default function DashboardPage() {
               <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
             </Link>
           </div>
+
+          {/* Complete NASA & Space Agency Partner Data Ecosystem */}
+          <NasaResourcesHub compact />
         </div>
       )}
     </div>
