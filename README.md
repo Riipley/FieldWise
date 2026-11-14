@@ -1,7 +1,10 @@
 # FieldWise — Smarter Rotations. Resilient Agriculture.
 
-> **NASA Space Apps Challenge 2026**  
-> **Challenge:** Field Shift – Adapting Farms with NASA Data
+> **NASA Space Apps Challenge 2026 — Team Convera**  
+> **Selected Challenge:** Field Shift: Adapting Farms with NASA Data  
+> 🌐 **Live Prototype / Demo App:** **[https://field-wise-blue.vercel.app/](https://field-wise-blue.vercel.app/)**  
+> 🚀 **NASA Space Apps Team Page:** **[https://www.spaceappschallenge.org/2026/find-a-team/convera/](https://www.spaceappschallenge.org/2026/find-a-team/convera/)**  
+> 📄 **Project Submission PDF:** **[FieldWise_NASA_Space_Apps_Submission.pdf](./FieldWise_NASA_Space_Apps_Submission.pdf)**
 
 FieldWise is a **Location-Based Agricultural Decision Support System** designed to assist farmers, agricultural extension agents, and agronomists in designing, evaluating, and comparing crop rotation strategies based on farm parcel coordinates, real NASA satellite agroclimatology data, and soil context.
 
